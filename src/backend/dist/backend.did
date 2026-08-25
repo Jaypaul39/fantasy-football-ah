@@ -1,0 +1,572 @@
+type WonPlayer = 
+ record {
+   byeWeek: opt nat;
+   closedAt: Timestamp;
+   nominatedBy: UserId;
+   playerId: text;
+   playerName: text;
+   position: text;
+   team: text;
+   winningBid: nat;
+ };
+type WeeklyPlayerStats = 
+ record {
+   fumblesLost: nat;
+   ints: nat;
+   passTds: nat;
+   passYds: int;
+   playerId: text;
+   recTds: nat;
+   recYds: int;
+   receptions: nat;
+   rushTds: nat;
+   rushYds: int;
+   season: nat;
+   twoPtConversions: nat;
+   week: nat;
+ };
+type Value = 
+ variant {
+   "bool": bool;
+   float: float64;
+   "int": int;
+   "nat": nat;
+   "null";
+   "text": text;
+ };
+type UserProfile = 
+ record {
+   avatarUrl: opt text;
+   displayName: text;
+   userId: UserId;
+ };
+type UserId = principal;
+type TransformationOutput = 
+ record {
+   body: blob;
+   headers: vec HttpHeader;
+   status: nat;
+ };
+type TransformationInput = 
+ record {
+   context: blob;
+   response: HttpRequestResult;
+ };
+type Timestamp = int;
+type ScoringFormat = 
+ variant {
+   custom: CustomScoringSettings;
+   halfPpr;
+   ppr;
+   std;
+ };
+type RosterSettings = 
+ record {
+   bench: nat;
+   flex: nat;
+   flexPositions: vec text;
+   qb: nat;
+   rb: nat;
+   superflex: nat;
+   superflexPositions: vec text;
+   te: nat;
+   wr: nat;
+ };
+type RoomView = 
+ record {
+   activeNominations: vec NominationView;
+   completedNominations: vec NominationView;
+   currentNominatorId: opt UserId;
+   currentNominatorName: opt text;
+   draftedPlayerIds: vec text;
+   myProxyBids: vec ProxyBid;
+   nominationTimerSecsRemaining: nat;
+   participants: vec ParticipantView;
+   queuedPlayerId: opt text;
+   room: Room;
+ };
+type RoomSummary = 
+ record {
+   adminId: UserId;
+   createdAt: Timestamp;
+   id: RoomId;
+   isPublic: bool;
+   maxParticipants: nat;
+   name: text;
+   participantCount: nat;
+   state: AuctionState;
+ };
+type RoomId = text;
+type Room = 
+ record {
+   admin: UserId;
+   createdAt: Timestamp;
+   id: RoomId;
+   isPublic: bool;
+   leagueFormat: opt text;
+   name: text;
+   nominationTurnPausedAt: opt Timestamp;
+   nominationTurnStartedAt: Timestamp;
+   nominatorIndex: nat;
+   paidParticipants: vec UserId;
+   participants: vec UserId;
+   password: opt text;
+   playerFilter: PlayerFilter;
+   readyParticipants: vec UserId;
+   rosterSettings: opt RosterSettings;
+   scoringFormat: ScoringFormat;
+   season: nat;
+   settings: AuctionSettings;
+   startingBudget: nat;
+   state: AuctionState;
+   teamCount: opt nat;
+ };
+type Result__1 = 
+ record {
+   hasMore: bool;
+   rows: vec vec Cell;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok;
+ };
+type PublicParticipantBudget = 
+ record {
+   publicAvailableBudget: nat;
+   spentBudget: nat;
+   totalBudget: nat;
+ };
+type ProxyBid = 
+ record {
+   maxBid: nat;
+   nominationId: NominationId;
+   userId: UserId;
+ };
+type PrivateParticipantBudget = 
+ record {
+   availableBudget: nat;
+   committedBudget: nat;
+   spentBudget: nat;
+   totalBudget: nat;
+ };
+type PlayerFilter = 
+ record {
+   filterType: text;
+   positions: vec text;
+ };
+type Player = 
+ record {
+   adp: float64;
+   byeWeek: opt nat;
+   headshotUrl: opt text;
+   id: text;
+   name: text;
+   position: text;
+   team: text;
+   yearsExp: nat;
+ };
+type ParticipantView = 
+ record {
+   avatarUrl: opt text;
+   budgetView: ParticipantBudgetView;
+   displayName: text;
+   skipNominationTurn: bool;
+   userId: UserId;
+   wonPlayers: vec WonPlayer;
+ };
+type ParticipantBudgetView = 
+ variant {
+   private: PrivateParticipantBudget;
+   public: PublicParticipantBudget;
+ };
+type NominationView = 
+ record {
+   bidLeader: opt UserId;
+   bidLeaderName: opt text;
+   currentBid: nat;
+   id: NominationId;
+   imageUrl: opt text;
+   nominatedBy: UserId;
+   playerId: text;
+   playerName: text;
+   position: text;
+   roomId: RoomId;
+   state: NominationState;
+   team: text;
+   timerSecsRemaining: nat;
+ };
+type NominationState = 
+ variant {
+   Active;
+   Closed;
+   Expired;
+ };
+type NominationId = nat;
+type HttpRequestResult = 
+ record {
+   body: blob;
+   headers: vec HttpHeader;
+   status: nat;
+ };
+type HttpHeader = 
+ record {
+   name: text;
+   value: text;
+ };
+type CustomScoringSettings = 
+ record {
+   fumbleLostPoints: float64;
+   intPoints: float64;
+   passTdPoints: float64;
+   passYdPoints: float64;
+   recTdPoints: float64;
+   recYdPoints: float64;
+   receptionPoints: float64;
+   rushTdPoints: float64;
+   rushYdPoints: float64;
+   twoPtPoints: float64;
+ };
+type ChatMessage = 
+ record {
+   displayName: text;
+   id: nat;
+   message: text;
+   reactions: vec record {
+                    text;
+                    vec UserId;
+                  };
+   timestamp: Timestamp;
+   userId: UserId;
+ };
+type Cell = 
+ record {
+   name: text;
+   value: Value;
+ };
+type BidHistoryEventType = 
+ variant {
+   leaderChanged;
+   nominationCreated;
+   nominationEnded;
+ };
+type BidHistoryEvent = 
+ record {
+   amount: nat;
+   displayName: text;
+   eventType: BidHistoryEventType;
+   isAutoBid: opt bool;
+   playerName: text;
+   timestamp: Timestamp;
+   userId: UserId;
+ };
+type BestBallConfig = 
+ record {
+   endWeek: nat;
+   startWeek: nat;
+ };
+type AuctionState = 
+ variant {
+   Active;
+   Completed;
+   Paused;
+   Waiting;
+ };
+type AuctionSettings = 
+ record {
+   adpDataset: text;
+   bidTimerSecs: nat;
+   maxActivePicks: nat;
+   maxParticipants: nat;
+   maxRosterSize: opt nat;
+   minBidIncrement: nat;
+   nomTimerSecs: nat;
+ };
+type AdpEntry = 
+ record {
+   adp: float64;
+   name: text;
+   position: opt text;
+   team: opt text;
+ };
+type ADPDataset = 
+ record {
+   entries: vec AdpEntry;
+   importedAt: int;
+   lastUpdated: int;
+ };
+service : {
+  adminDrainQueueNow: () -> (variant {
+                               err: text;
+                               ok: nat;
+                             });
+  checkIsAdmin: () -> (bool) query;
+  clearNominationQueue: (roomId: RoomId) -> ();
+  clearPlayers: () -> (variant {
+                         err: text;
+                         ok;
+                       });
+  createRoom: (name: text, startingBudget: nat, settings: AuctionSettings,
+   isPublic: bool, password: opt text, playerFilter: opt PlayerFilter,
+   maxRosterSize: opt nat, rosterSettings: opt RosterSettings, teamCount:
+   opt nat, leagueFormat: opt text, season: nat, scoringFormat:
+   ScoringFormat) -> (variant {
+                        err: text;
+                        ok: RoomId;
+                      });
+  deleteRoom: (roomId: RoomId) -> (variant {
+                                     err: text;
+                                     ok;
+                                   });
+  editParticipantBudget: (roomId: RoomId, targetUser: UserId, newBudget:
+   nat) -> (variant {
+              err: text;
+              ok;
+            });
+  endAuction: (roomId: RoomId) -> (variant {
+                                     err: text;
+                                     ok;
+                                   });
+  execute: (qJson: text) -> (Result__1) query;
+  fetchRssFeeds: () -> (text);
+  getADPDataset: () -> (opt ADPDataset) query;
+  getADPDatasetByType: (datasetType: text) -> (opt ADPDataset) query;
+  getActiveADPDataset: () -> (opt ADPDataset) query;
+  getBestBallConfig: (roomId: RoomId) -> (opt BestBallConfig) query;
+  getByeWeeks: () -> (vec record {
+                            text;
+                            nat;
+                          }) query;
+  getCycleBalance: () -> (nat) query;
+  getDisplayName: (userId: UserId) -> (opt text) query;
+  getGiphyApiKey: () -> (opt text) query;
+  getHeartbeatDiagnostics: () ->
+   (record {
+      lastNotificationWorkerCompletedAt: int;
+      lastNotificationWorkerError: opt text;
+      lastNotificationWorkerStartedAt: int;
+      notificationWorkerEntryCount: nat;
+    }) query;
+  getLastRssFetchStatus: () -> (vec record {
+                                      text;
+                                      bool;
+                                    }) query;
+  getMessages: (roomId: RoomId, limit: nat) -> (vec ChatMessage) query;
+  getNominationHistory: (nominationId: NominationId) ->
+   (vec BidHistoryEvent) query;
+  getNominationQueue: (roomId: RoomId) -> (opt text) query;
+  getNominations: (roomId: RoomId) -> (vec NominationView) query;
+  getNotificationCounters: () ->
+   (record {
+      expired: nat;
+      failed: nat;
+      processed: nat;
+      queued: nat;
+      retried: nat;
+      sent: nat;
+    }) query;
+  getNotificationQueueSnapshot: () ->
+   (vec
+     record {
+       ageSeconds: nat;
+       attempts: nat;
+       id: nat;
+       title: text;
+       userId: text;
+     }) query;
+  getOneSignalApiKey: () -> (opt text) query;
+  getOneSignalPlayerIds: () -> (vec record {
+                                      text;
+                                      text;
+                                    }) query;
+  getPlayerWeeklyPoints: (playerId: text, season: nat, week: nat, format:
+   ScoringFormat) -> (opt float64) query;
+  getPlayers: (queryText: text, position: opt text) -> (vec Player) query;
+  getPlayersByRoom: (roomId: RoomId, queryText: text, positionFilter:
+   text) -> (vec Player) query;
+  getPlayersWithADP: () -> (vec Player) query;
+  getProfile: () -> (UserProfile) query;
+  getRoomParticipantPrincipals: (roomId: RoomId) ->
+   (variant {
+      err: text;
+      ok: vec record {
+                displayName: text;
+                "principal": text;
+              };
+    }) query;
+  getRoomState: (roomId: RoomId) -> (variant {
+                                       err: text;
+                                       ok: RoomView;
+                                     }) query;
+  getRooms: () -> (vec RoomSummary);
+  getRssFeedUrls: () -> (vec text) query;
+  getRssRefreshIntervalSecs: () -> (nat) query;
+  getUserRooms: () -> (vec RoomSummary);
+  importADPDataset: (entries: vec AdpEntry, datasetType: opt text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
+  importPlayers: (batch: vec Player) -> (variant {
+                                           err: text;
+                                           ok: nat;
+                                         });
+  joinPrivateRoomByPassword: (password: text) ->
+   (variant {
+      err: text;
+      ok: RoomId;
+    });
+  joinRoom: (roomId: RoomId, password: opt text) -> (variant {
+                                                       err: text;
+                                                       ok;
+                                                     });
+  leaveRoom: (roomId: RoomId) -> (variant {
+                                    err: text;
+                                    ok;
+                                  });
+  listPublicRooms: () -> (vec RoomSummary) query;
+  nominatePlayer: (roomId: RoomId, playerId: text) ->
+   (variant {
+      err: text;
+      ok: NominationId;
+    });
+  pauseAuction: (roomId: RoomId) -> (variant {
+                                       err: text;
+                                       ok;
+                                     });
+  placeProxyBid: (nominationId: NominationId, roomId: RoomId, maxBid: 
+   nat) -> (variant {
+              err: text;
+              ok;
+            });
+  randomizeNominationOrder: (roomId: RoomId) ->
+   (variant {
+      err: text;
+      ok: vec UserId;
+    });
+  reconcileMembershipIndexes: () -> ();
+  recoverAdmin: (providedSecret: text) -> (Result);
+  removeADPDataset: (datasetType: text) -> (variant {
+                                              err: text;
+                                              ok: text;
+                                            });
+  removeParticipant: (roomId: RoomId, targetUser: UserId) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  removeUserFromRoom: (roomId: RoomId, userId: UserId) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  resumeAuction: (roomId: RoomId) -> (variant {
+                                        err: text;
+                                        ok;
+                                      });
+  schema: () -> (text) query;
+  sendMessage: (roomId: RoomId, message: text) -> (variant {
+                                                     err: text;
+                                                     ok;
+                                                   });
+  sendTestPush: () ->
+   (variant {
+      err: text;
+      ok: record {
+            body: text;
+            looksSuccessful: bool;
+            playerId: text;
+          };
+    });
+  setActiveNominationCount: (roomId: RoomId, count: nat) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  setAvatarUrl: (url: text) -> (variant {
+                                  err: text;
+                                  ok;
+                                });
+  setBestBallConfig: (roomId: RoomId, startWeek: nat, endWeek: nat) ->
+   (Result);
+  setByeWeeks: (mapping: vec record {
+                               text;
+                               nat;
+                             }) -> (variant {
+                                      err: text;
+                                      ok;
+                                    });
+  setDisplayName: (name: text) -> (variant {
+                                     err: text;
+                                     ok;
+                                   });
+  setGiphyApiKey: (key: text) -> (variant {
+                                    err: text;
+                                    ok: text;
+                                  });
+  setNominationOrder: (roomId: RoomId, orderedUsers: vec UserId) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  setNominationQueue: (roomId: RoomId, playerId: text) ->
+   (variant {
+      err: text;
+      ok: text;
+    });
+  setOneSignalApiKey: (key: text) -> (variant {
+                                        err: text;
+                                        ok: text;
+                                      });
+  setOneSignalPlayerId: (id: text) -> ();
+  setParticipantPaid: (roomId: RoomId, targetUserId: UserId, paid: bool) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  setRecoveryPassword: (newSecret: text) -> (Result);
+  setRssFeedUrls: (urls: vec text) -> (variant {
+                                         err: text;
+                                         ok;
+                                       });
+  setRssRefreshIntervalSecs: (seconds: nat) -> (variant {
+                                                  err: text;
+                                                  ok;
+                                                });
+  setSkipNominationTurn: (roomId: RoomId, skip: bool) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  startAuction: (roomId: RoomId) -> (variant {
+                                       err: text;
+                                       ok;
+                                     });
+  sweepNominations: (roomId: RoomId) -> ();
+  syncWeeklyStats: (season: nat, week: nat, batch: vec WeeklyPlayerStats) ->
+   (variant {
+      err: text;
+      ok: nat;
+    });
+  toggleMessageReaction: (roomId: RoomId, messageId: nat, emoji: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
+  toggleReady: (roomId: RoomId) -> (variant {
+                                      err: text;
+                                      ok;
+                                    });
+  transferParticipantIdentity: (roomId: RoomId, oldPrincipal: UserId,
+   newPrincipal: UserId) -> (variant {
+                               err: text;
+                               ok: text;
+                             });
+  transform: (raw: TransformationInput) -> (TransformationOutput) query;
+  updateRoomSettings: (roomId: RoomId, nomTimerSecs: nat, bidTimerSecs: 
+   nat, maxRosterSize: opt nat, adpDataset: text) ->
+   (variant {
+      err: text;
+      ok;
+    });
+}

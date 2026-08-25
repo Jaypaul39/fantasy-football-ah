@@ -1,0 +1,2921 @@
+// Version: 4.0.0
+type ADPDataset__1027473566 =
+  {entries : [AdpEntry__509148580]; importedAt : Int; lastUpdated : Int};
+type ADPDataset__176415502 =
+  {entries : [AdpEntry__621835251]; importedAt : Int; lastUpdated : Int};
+type ADPDataset__232746973 =
+  {entries : [AdpEntry__189503146]; importedAt : Int; lastUpdated : Int};
+type ADPDataset__48208444 =
+  {entries : [AdpEntry__8001881]; importedAt : Int; lastUpdated : Int};
+type ADPDataset__562754287 =
+  {entries : [AdpEntry__230867630]; importedAt : Int; lastUpdated : Int};
+type ADPDataset__590946307 =
+  {entries : [AdpEntry__89415472]; importedAt : Int; lastUpdated : Int};
+type ADPDataset__856740658 =
+  {entries : [AdpEntry__874025210]; importedAt : Int; lastUpdated : Int};
+type ADPDataset__917637605 =
+  {entries : [AdpEntry__395466448]; importedAt : Int; lastUpdated : Int};
+type ADPDataset__990193024 =
+  {entries : [AdpEntry__1006327042]; importedAt : Int; lastUpdated : Int};
+type AdpEntry__1006327042 =
+  {adp : Float; name : Text; position : ?Text; team : ?Text};
+type AdpEntry__189503146 =
+  {adp : Float; name : Text; position : ?Text; team : ?Text};
+type AdpEntry__230867630 =
+  {adp : Float; name : Text; position : ?Text; team : ?Text};
+type AdpEntry__395466448 =
+  {adp : Float; name : Text; position : ?Text; team : ?Text};
+type AdpEntry__509148580 =
+  {adp : Float; name : Text; position : ?Text; team : ?Text};
+type AdpEntry__621835251 =
+  {adp : Float; name : Text; position : ?Text; team : ?Text};
+type AdpEntry__8001881 =
+  {adp : Float; name : Text; position : ?Text; team : ?Text};
+type AdpEntry__874025210 =
+  {adp : Float; name : Text; position : ?Text; team : ?Text};
+type AdpEntry__89415472 =
+  {adp : Float; name : Text; position : ?Text; team : ?Text};
+type AuctionSettings__1064154697 =
+  {
+    adpDataset : Text;
+    bidTimerSecs : Nat;
+    maxActivePicks : Nat;
+    maxParticipants : Nat;
+    maxRosterSize : ?Nat;
+    minBidIncrement : Nat;
+    nomTimerSecs : Nat
+  };
+type AuctionSettings__236326260 =
+  {
+    adpDataset : Text;
+    bidTimerSecs : Nat;
+    maxActivePicks : Nat;
+    maxParticipants : Nat;
+    maxRosterSize : ?Nat;
+    minBidIncrement : Nat;
+    nomTimerSecs : Nat
+  };
+type AuctionSettings__593156911 =
+  {
+    adpDataset : Text;
+    bidTimerSecs : Nat;
+    maxActivePicks : Nat;
+    maxParticipants : Nat;
+    maxRosterSize : ?Nat;
+    minBidIncrement : Nat;
+    nomTimerSecs : Nat
+  };
+type AuctionSettings__626367178 =
+  {
+    adpDataset : Text;
+    bidTimerSecs : Nat;
+    maxActivePicks : Nat;
+    maxParticipants : Nat;
+    maxRosterSize : ?Nat;
+    minBidIncrement : Nat;
+    nomTimerSecs : Nat
+  };
+type AuctionSettings__633938128 =
+  {
+    adpDataset : Text;
+    bidTimerSecs : Nat;
+    maxActivePicks : Nat;
+    maxParticipants : Nat;
+    maxRosterSize : ?Nat;
+    minBidIncrement : Nat;
+    nomTimerSecs : Nat
+  };
+type AuctionSettings__688438015 =
+  {
+    adpDataset : Text;
+    bidTimerSecs : Nat;
+    maxActivePicks : Nat;
+    maxParticipants : Nat;
+    maxRosterSize : ?Nat;
+    minBidIncrement : Nat;
+    nomTimerSecs : Nat
+  };
+type AuctionSettings__749968699 =
+  {
+    adpDataset : Text;
+    bidTimerSecs : Nat;
+    maxActivePicks : Nat;
+    maxParticipants : Nat;
+    maxRosterSize : ?Nat;
+    minBidIncrement : Nat;
+    nomTimerSecs : Nat
+  };
+type AuctionSettings__756851356 =
+  {
+    adpDataset : Text;
+    bidTimerSecs : Nat;
+    maxActivePicks : Nat;
+    maxParticipants : Nat;
+    maxRosterSize : ?Nat;
+    minBidIncrement : Nat;
+    nomTimerSecs : Nat
+  };
+type AuctionSettings__774097560 =
+  {
+    adpDataset : Text;
+    bidTimerSecs : Nat;
+    maxActivePicks : Nat;
+    maxParticipants : Nat;
+    maxRosterSize : ?Nat;
+    minBidIncrement : Nat;
+    nomTimerSecs : Nat
+  };
+type AuctionState__112870982 = {#Active; #Completed; #Paused; #Waiting};
+type AuctionState__122295994 = {#Active; #Completed; #Paused; #Waiting};
+type AuctionState__126333765 = {#Active; #Completed; #Paused; #Waiting};
+type AuctionState__244365821 = {#Active; #Completed; #Paused; #Waiting};
+type AuctionState__295758533 = {#Active; #Completed; #Paused; #Waiting};
+type AuctionState__542105016 = {#Active; #Completed; #Paused; #Waiting};
+type AuctionState__755546054 = {#Active; #Completed; #Paused; #Waiting};
+type AuctionState__868715246 = {#Active; #Completed; #Paused; #Waiting};
+type AuctionState__881530286 = {#Active; #Completed; #Paused; #Waiting};
+type BestBallConfig__1004604901 = {endWeek : Nat; startWeek : Nat};
+type BestBallConfig__563966449 = {endWeek : Nat; startWeek : Nat};
+type BestBallConfig__693850428 = {endWeek : Nat; startWeek : Nat};
+type BestBallConfig__900406101 = {endWeek : Nat; startWeek : Nat};
+type BidHistoryEventType__412489800 =
+  {#leaderChanged; #nominationCreated; #nominationEnded};
+type BidHistoryEventType__471699429 =
+  {#leaderChanged; #nominationCreated; #nominationEnded};
+type BidHistoryEventType__483181905 =
+  {#leaderChanged; #nominationCreated; #nominationEnded};
+type BidHistoryEventType__502109474 =
+  {#leaderChanged; #nominationCreated; #nominationEnded};
+type BidHistoryEventType__645519634 =
+  {#leaderChanged; #nominationCreated; #nominationEnded};
+type BidHistoryEventType__721794683 =
+  {#leaderChanged; #nominationCreated; #nominationEnded};
+type BidHistoryEventType__809466131 =
+  {#leaderChanged; #nominationCreated; #nominationEnded};
+type BidHistoryEventType__924292237 =
+  {#leaderChanged; #nominationCreated; #nominationEnded};
+type BidHistoryEventType__963561362 =
+  {#leaderChanged; #nominationCreated; #nominationEnded};
+type BidHistoryEvent__119369364 =
+  {
+    amount : Nat;
+    displayName : Text;
+    eventType : BidHistoryEventType__721794683;
+    isAutoBid : ?Bool;
+    playerName : Text;
+    timestamp : Timestamp__370930425;
+    userId : UserId__905231973
+  };
+type BidHistoryEvent__142582416 =
+  {
+    amount : Nat;
+    displayName : Text;
+    eventType : BidHistoryEventType__502109474;
+    isAutoBid : ?Bool;
+    playerName : Text;
+    timestamp : Timestamp__988901252;
+    userId : UserId__899134035
+  };
+type BidHistoryEvent__198339331 =
+  {
+    amount : Nat;
+    displayName : Text;
+    eventType : BidHistoryEventType__809466131;
+    isAutoBid : ?Bool;
+    playerName : Text;
+    timestamp : Timestamp__443237239;
+    userId : UserId__624852056
+  };
+type BidHistoryEvent__228554829 =
+  {
+    amount : Nat;
+    displayName : Text;
+    eventType : BidHistoryEventType__924292237;
+    isAutoBid : ?Bool;
+    playerName : Text;
+    timestamp : Timestamp__453886411;
+    userId : UserId__489994765
+  };
+type BidHistoryEvent__42991241 =
+  {
+    amount : Nat;
+    displayName : Text;
+    eventType : BidHistoryEventType__471699429;
+    isAutoBid : ?Bool;
+    playerName : Text;
+    timestamp : Timestamp__80247937;
+    userId : UserId__946967140
+  };
+type BidHistoryEvent__563061454 =
+  {
+    amount : Nat;
+    displayName : Text;
+    eventType : BidHistoryEventType__645519634;
+    isAutoBid : ?Bool;
+    playerName : Text;
+    timestamp : Timestamp__253305079;
+    userId : UserId__617304325
+  };
+type BidHistoryEvent__598684028 =
+  {
+    amount : Nat;
+    displayName : Text;
+    eventType : BidHistoryEventType__483181905;
+    isAutoBid : ?Bool;
+    playerName : Text;
+    timestamp : Timestamp__866031271;
+    userId : UserId__248585693
+  };
+type BidHistoryEvent__610208606 =
+  {
+    amount : Nat;
+    displayName : Text;
+    eventType : BidHistoryEventType__412489800;
+    isAutoBid : ?Bool;
+    playerName : Text;
+    timestamp : Timestamp__296422864;
+    userId : UserId__810201388
+  };
+type BidHistoryEvent__920926881 =
+  {
+    amount : Nat;
+    displayName : Text;
+    eventType : BidHistoryEventType__963561362;
+    isAutoBid : ?Bool;
+    playerName : Text;
+    timestamp : Timestamp__937470241;
+    userId : UserId__719351118
+  };
+type Bid__1028760386 =
+  {
+    amount : Nat;
+    isProxy : Bool;
+    nominationId : NominationId__739815190;
+    timestamp : Timestamp__453886411;
+    userId : UserId__489994765
+  };
+type Bid__34904740 =
+  {
+    amount : Nat;
+    isProxy : Bool;
+    nominationId : NominationId__580595011;
+    timestamp : Timestamp__296422864;
+    userId : UserId__810201388
+  };
+type Bid__437135410 =
+  {
+    amount : Nat;
+    isProxy : Bool;
+    nominationId : NominationId__986388539;
+    timestamp : Timestamp__253305079;
+    userId : UserId__617304325
+  };
+type Bid__611652826 =
+  {
+    amount : Nat;
+    isProxy : Bool;
+    nominationId : NominationId__934590375;
+    timestamp : Timestamp__988901252;
+    userId : UserId__899134035
+  };
+type Bid__613633421 =
+  {
+    amount : Nat;
+    isProxy : Bool;
+    nominationId : NominationId__461430578;
+    timestamp : Timestamp__937470241;
+    userId : UserId__719351118
+  };
+type Bid__660799574 =
+  {
+    amount : Nat;
+    isProxy : Bool;
+    nominationId : NominationId__796958695;
+    timestamp : Timestamp__370930425;
+    userId : UserId__905231973
+  };
+type Bid__723906477 =
+  {
+    amount : Nat;
+    isProxy : Bool;
+    nominationId : NominationId__399724947;
+    timestamp : Timestamp__80247937;
+    userId : UserId__946967140
+  };
+type Bid__785283987 =
+  {
+    amount : Nat;
+    isProxy : Bool;
+    nominationId : NominationId__736744392;
+    timestamp : Timestamp__443237239;
+    userId : UserId__624852056
+  };
+type Bid__958152952 =
+  {
+    amount : Nat;
+    isProxy : Bool;
+    nominationId : NominationId__588766278;
+    timestamp : Timestamp__866031271;
+    userId : UserId__248585693
+  };
+type ChatMessage__147832356 =
+  {
+    displayName : Text;
+    id : Nat;
+    message : Text;
+    reactions : [(Text, [UserId__248585693])];
+    timestamp : Timestamp__866031271;
+    userId : UserId__248585693
+  };
+type ChatMessage__343557596 =
+  {
+    displayName : Text;
+    id : Nat;
+    message : Text;
+    reactions : [(Text, [UserId__617304325])];
+    timestamp : Timestamp__253305079;
+    userId : UserId__617304325
+  };
+type ChatMessage__344529175 =
+  {
+    displayName : Text;
+    id : Nat;
+    message : Text;
+    reactions : [(Text, [UserId__624852056])];
+    timestamp : Timestamp__443237239;
+    userId : UserId__624852056
+  };
+type ChatMessage__399925406 =
+  {
+    displayName : Text;
+    id : Nat;
+    message : Text;
+    reactions : [(Text, [UserId__899134035])];
+    timestamp : Timestamp__988901252;
+    userId : UserId__899134035
+  };
+type ChatMessage__461964461 =
+  {
+    displayName : Text;
+    id : Nat;
+    message : Text;
+    reactions : [(Text, [UserId__810201388])];
+    timestamp : Timestamp__296422864;
+    userId : UserId__810201388
+  };
+type ChatMessage__642255733 =
+  {
+    displayName : Text;
+    id : Nat;
+    message : Text;
+    reactions : [(Text, [UserId__946967140])];
+    timestamp : Timestamp__80247937;
+    userId : UserId__946967140
+  };
+type ChatMessage__824836617 =
+  {
+    displayName : Text;
+    id : Nat;
+    message : Text;
+    reactions : [(Text, [UserId__905231973])];
+    timestamp : Timestamp__370930425;
+    userId : UserId__905231973
+  };
+type ChatMessage__830159703 =
+  {
+    displayName : Text;
+    id : Nat;
+    message : Text;
+    reactions : [(Text, [UserId__489994765])];
+    timestamp : Timestamp__453886411;
+    userId : UserId__489994765
+  };
+type ChatMessage__967894394 =
+  {
+    displayName : Text;
+    id : Nat;
+    message : Text;
+    reactions : [(Text, [UserId__719351118])];
+    timestamp : Timestamp__937470241;
+    userId : UserId__719351118
+  };
+type CustomScoringSettings__112817573 =
+  {
+    fumbleLostPoints : Float;
+    intPoints : Float;
+    passTdPoints : Float;
+    passYdPoints : Float;
+    recTdPoints : Float;
+    recYdPoints : Float;
+    receptionPoints : Float;
+    rushTdPoints : Float;
+    rushYdPoints : Float;
+    twoPtPoints : Float
+  };
+type CustomScoringSettings__244368490 =
+  {
+    fumbleLostPoints : Float;
+    intPoints : Float;
+    passTdPoints : Float;
+    passYdPoints : Float;
+    recTdPoints : Float;
+    recYdPoints : Float;
+    receptionPoints : Float;
+    rushTdPoints : Float;
+    rushYdPoints : Float;
+    twoPtPoints : Float
+  };
+type CustomScoringSettings__424080601 =
+  {
+    fumbleLostPoints : Float;
+    intPoints : Float;
+    passTdPoints : Float;
+    passYdPoints : Float;
+    recTdPoints : Float;
+    recYdPoints : Float;
+    receptionPoints : Float;
+    rushTdPoints : Float;
+    rushYdPoints : Float;
+    twoPtPoints : Float
+  };
+type CustomScoringSettings__481709642 =
+  {
+    fumbleLostPoints : Float;
+    intPoints : Float;
+    passTdPoints : Float;
+    passYdPoints : Float;
+    recTdPoints : Float;
+    recYdPoints : Float;
+    receptionPoints : Float;
+    rushTdPoints : Float;
+    rushYdPoints : Float;
+    twoPtPoints : Float
+  };
+type Data__265875254<K, V> = {var count : Nat__58649523; kvs : [var ?(K, V)]};
+type Data__859131645<T> = {var count : Nat__58649523; elements : [var ?T]};
+type Internal__161573640<K, V> =
+  {children : [var ?Node__430031793<K, V>]; data : Data__265875254<K, V>};
+type Internal__778364379<T> =
+  {children : [var ?Node__1045371124<T>]; data : Data__859131645<T>};
+type Leaf__1045638083<K, V> = {data : Data__265875254<K, V>};
+type Leaf__776840865<T> = {data : Data__859131645<T>};
+type List__1004628775<T> =
+  {
+    var blockIndex : Nat__58649523;
+    var blocks : [var [var ?T]];
+    var elementIndex : Nat__58649523
+  };
+type List__89170296<T> = List__1004628775<T>;
+type Map__13625999<K, V> =
+  {var root : Node__430031793<K, V>; var size : Nat__58649523};
+type Map__386906547<K, V> = Map__670138087<K, V>;
+type Map__670138087<K, V> = Map__13625999<K, V>;
+type Nat__58649523 = Nat__920180692;
+type Nat__920180692 = Nat;
+type NewActor__40607548 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__562754287>;
+    activeRoomIds : Set__195681557<RoomId__5663043>;
+    adminPrincipalStore : Map__386906547<Text, UserId__489994765>;
+    bestBallConfigs :
+      Map__386906547<RoomId__5663043, BestBallConfig__563966449>;
+    bids :
+      Map__386906547<RoomId__5663043,
+                      Map__386906547<NominationId__739815190,
+                                      List__89170296<Bid__1028760386>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    draftedPlayerIds : Map__386906547<RoomId__5663043, Set__195681557<Text>>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom : Map__386906547<RoomId__5663043, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__5663043,
+                      Map__386906547<NominationId__739815190,
+                                      List__89170296<BidHistoryEvent__228554829>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__739815190, Nomination__521905191>;
+    nominationsByRoom :
+      Map__386906547<RoomId__5663043, [NominationId__739815190]>;
+    notificationQueue : List__89170296<PendingNotification__987401484>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__5663043,
+                      Map__386906547<UserId__489994765,
+                                      Participant__912216647>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__509422627>>;
+    players : Map__386906547<Text, Player__738823405>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__489994765, UserProfile__955926780>;
+    proxyBids :
+      Map__386906547<RoomId__5663043,
+                      Map__386906547<NominationId__739815190,
+                                      Map__386906547<UserId__489994765,
+                                                      ProxyBid__41195042>>>;
+    recoveryAttempts : Map__386906547<Text, RecoveryAttempt__274233928>;
+    recoveryPasswordHash : {var value : ?Text};
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__5663043, List__89170296<ChatMessage__830159703>>;
+    rooms : Map__386906547<RoomId__5663043, NewRoom__316196905>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__489994765, List__89170296<RoomId__5663043>>
+  };
+type NewActor__418213216 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__48208444>;
+    activeRoomIds : Set__195681557<RoomId__217933440>;
+    adminPrincipalStore : Map__386906547<Text, UserId__624852056>;
+    bids :
+      Map__386906547<RoomId__217933440,
+                      Map__386906547<NominationId__736744392,
+                                      List__89170296<Bid__785283987>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom : Map__386906547<RoomId__217933440, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__217933440,
+                      Map__386906547<NominationId__736744392,
+                                      List__89170296<BidHistoryEvent__198339331>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__736744392, Nomination__156987796>;
+    nominationsByRoom :
+      Map__386906547<RoomId__217933440, [NominationId__736744392]>;
+    notificationQueue : List__89170296<PendingNotification__682667126>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__217933440,
+                      Map__386906547<UserId__624852056,
+                                      Participant__1015404222>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__613524624>>;
+    players : Map__386906547<Text, Player__1019825387>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__624852056, UserProfile__51888098>;
+    proxyBids :
+      Map__386906547<RoomId__217933440,
+                      Map__386906547<NominationId__736744392,
+                                      Map__386906547<UserId__624852056,
+                                                      ProxyBid__115992688>>>;
+    recoveryAttempts : Map__386906547<Text, RecoveryAttempt__708822965>;
+    recoveryPasswordHash : {var value : ?Text};
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__217933440,
+                      List__89170296<ChatMessage__344529175>>;
+    rooms : Map__386906547<RoomId__217933440, Room__133130135>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__624852056, List__89170296<RoomId__217933440>>
+  };
+type NewActor__420660799 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__176415502>;
+    activeRoomIds : Set__195681557<RoomId__1016577012>;
+    adminPrincipalStore : Map__386906547<Text, UserId__946967140>;
+    bids :
+      Map__386906547<RoomId__1016577012,
+                      Map__386906547<NominationId__399724947,
+                                      List__89170296<Bid__723906477>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    draftedPlayerIds :
+      Map__386906547<RoomId__1016577012, Set__195681557<Text>>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom :
+      Map__386906547<RoomId__1016577012, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__1016577012,
+                      Map__386906547<NominationId__399724947,
+                                      List__89170296<BidHistoryEvent__42991241>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__399724947, Nomination__664308577>;
+    nominationsByRoom :
+      Map__386906547<RoomId__1016577012, [NominationId__399724947]>;
+    notificationQueue : List__89170296<PendingNotification__965105022>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__1016577012,
+                      Map__386906547<UserId__946967140,
+                                      Participant__811998025>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__724309324>>;
+    players : Map__386906547<Text, Player__311646412>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__946967140, UserProfile__935299759>;
+    proxyBids :
+      Map__386906547<RoomId__1016577012,
+                      Map__386906547<NominationId__399724947,
+                                      Map__386906547<UserId__946967140,
+                                                      ProxyBid__712769868>>>;
+    recoveryAttempts : Map__386906547<Text, RecoveryAttempt__689766172>;
+    recoveryPasswordHash : {var value : ?Text};
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__1016577012,
+                      List__89170296<ChatMessage__642255733>>;
+    rooms : Map__386906547<RoomId__1016577012, Room__7804569>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__946967140, List__89170296<RoomId__1016577012>>
+  };
+type NewActor__567342121 =
+  {
+    MAX_NOTIFICATIONS_PER_RUN : Nat;
+    MAX_NOTIFICATION_BODY_LENGTH : Nat;
+    MAX_NOTIFICATION_PROCESSING_NANOS : Nat;
+    MAX_QUEUE_SIZE : Nat;
+    MAX_SEND_ATTEMPTS : Nat;
+    NOTIFICATION_EXPIRY_NANOS : Nat;
+    _heartbeatTimer : Nat;
+    activeAdpDataset : Map__386906547<Text, ADPDataset__232746973>;
+    activeRoomIds : Set__195681557<RoomId__820301545>;
+    adminPrincipalStore : Map__386906547<Text, UserId__248585693>;
+    bids :
+      Map__386906547<RoomId__820301545,
+                      Map__386906547<NominationId__588766278,
+                                      List__89170296<Bid__958152952>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    cycleBalanceHistory : {var samples : [(Nat, Nat)]};
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    var heartbeatRunning : Bool;
+    heartbeatTickCount : {var count : Nat};
+    lastCycleSnapshotNs : {var timestamp : Nat};
+    lastHeartbeatTickAt : {var value : Int};
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom : Map__386906547<RoomId__820301545, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__820301545,
+                      Map__386906547<NominationId__588766278,
+                                      List__89170296<BidHistoryEvent__598684028>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__588766278, Nomination__6400755>;
+    notificationQueue : List__89170296<PendingNotification__957081670>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__820301545,
+                      Map__386906547<UserId__248585693,
+                                      Participant__262301330>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__985375560>>;
+    players : Map__386906547<Text, Player__740320691>;
+    var processingNotifications : Bool;
+    profiles : Map__386906547<UserId__248585693, UserProfile__151649062>;
+    proxyBids :
+      Map__386906547<RoomId__820301545,
+                      Map__386906547<NominationId__588766278,
+                                      Map__386906547<UserId__248585693,
+                                                      ProxyBid__495159277>>>;
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__820301545,
+                      List__89170296<ChatMessage__147832356>>;
+    rooms : Map__386906547<RoomId__820301545, Room__875365705>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__248585693, List__89170296<RoomId__820301545>>
+  };
+type NewActor__58855420 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__1027473566>;
+    activeRoomIds : Set__195681557<RoomId__1034792333>;
+    adminPrincipalStore : Map__386906547<Text, UserId__899134035>;
+    bestBallConfigs :
+      Map__386906547<RoomId__1034792333, BestBallConfig__900406101>;
+    bids :
+      Map__386906547<RoomId__1034792333,
+                      Map__386906547<NominationId__934590375,
+                                      List__89170296<Bid__611652826>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    draftedPlayerIds :
+      Map__386906547<RoomId__1034792333, Set__195681557<Text>>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom :
+      Map__386906547<RoomId__1034792333, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__1034792333,
+                      Map__386906547<NominationId__934590375,
+                                      List__89170296<BidHistoryEvent__142582416>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__934590375, Nomination__608384635>;
+    nominationsByRoom :
+      Map__386906547<RoomId__1034792333, [NominationId__934590375]>;
+    notificationQueue : List__89170296<PendingNotification__748907421>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__1034792333,
+                      Map__386906547<UserId__899134035,
+                                      Participant__915480590>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__132410633>>;
+    players : Map__386906547<Text, Player__967680300>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__899134035, UserProfile__965880994>;
+    proxyBids :
+      Map__386906547<RoomId__1034792333,
+                      Map__386906547<NominationId__934590375,
+                                      Map__386906547<UserId__899134035,
+                                                      ProxyBid__1013535168>>>;
+    recoveryAttempts : Map__386906547<Text, RecoveryAttempt__882605391>;
+    recoveryPasswordHash : {var value : ?Text};
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__1034792333,
+                      List__89170296<ChatMessage__399925406>>;
+    rooms : Map__386906547<RoomId__1034792333, Room__895051986>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__899134035, List__89170296<RoomId__1034792333>>;
+    weeklyPlayerStats : Map__386906547<Text, WeeklyPlayerStats__1061898723>
+  };
+type NewActor__757157654 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__990193024>;
+    activeRoomIds : Set__195681557<RoomId__338327646>;
+    adminPrincipalStore : Map__386906547<Text, UserId__810201388>;
+    bids :
+      Map__386906547<RoomId__338327646,
+                      Map__386906547<NominationId__580595011,
+                                      List__89170296<Bid__34904740>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom : Map__386906547<RoomId__338327646, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__338327646,
+                      Map__386906547<NominationId__580595011,
+                                      List__89170296<BidHistoryEvent__610208606>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__580595011, Nomination__28319590>;
+    notificationQueue : List__89170296<PendingNotification__430386039>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__338327646,
+                      Map__386906547<UserId__810201388,
+                                      Participant__807434318>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__431858672>>;
+    players : Map__386906547<Text, Player__483876038>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__810201388, UserProfile__674434911>;
+    proxyBids :
+      Map__386906547<RoomId__338327646,
+                      Map__386906547<NominationId__580595011,
+                                      Map__386906547<UserId__810201388,
+                                                      ProxyBid__624584715>>>;
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__338327646,
+                      List__89170296<ChatMessage__461964461>>;
+    rooms : Map__386906547<RoomId__338327646, Room__272010871>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__810201388, List__89170296<RoomId__338327646>>
+  };
+type NewActor__783349852 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__590946307>;
+    activeRoomIds : Set__195681557<RoomId__137466762>;
+    adminPrincipalStore : Map__386906547<Text, UserId__617304325>;
+    bestBallConfigs :
+      Map__386906547<RoomId__137466762, BestBallConfig__693850428>;
+    bids :
+      Map__386906547<RoomId__137466762,
+                      Map__386906547<NominationId__986388539,
+                                      List__89170296<Bid__437135410>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    draftedPlayerIds :
+      Map__386906547<RoomId__137466762, Set__195681557<Text>>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom : Map__386906547<RoomId__137466762, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__137466762,
+                      Map__386906547<NominationId__986388539,
+                                      List__89170296<BidHistoryEvent__563061454>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__986388539, Nomination__932914625>;
+    nominationsByRoom :
+      Map__386906547<RoomId__137466762, [NominationId__986388539]>;
+    notificationQueue : List__89170296<PendingNotification__853963565>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__137466762,
+                      Map__386906547<UserId__617304325,
+                                      Participant__466548478>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__206439393>>;
+    players : Map__386906547<Text, Player__243464184>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__617304325, UserProfile__254051766>;
+    proxyBids :
+      Map__386906547<RoomId__137466762,
+                      Map__386906547<NominationId__986388539,
+                                      Map__386906547<UserId__617304325,
+                                                      ProxyBid__486780895>>>;
+    recoveryAttempts : Map__386906547<Text, RecoveryAttempt__70994733>;
+    recoveryPasswordHash : {var value : ?Text};
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__137466762,
+                      List__89170296<ChatMessage__343557596>>;
+    rooms : Map__386906547<RoomId__137466762, Room__240238141>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__617304325, List__89170296<RoomId__137466762>>;
+    weeklyPlayerStats :
+      Map__386906547<Text, NewWeeklyPlayerStats__1072445382>
+  };
+type NewActor__861681917 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__917637605>;
+    activeRoomIds : Set__195681557<RoomId__787466293>;
+    adminPrincipalStore : Map__386906547<Text, UserId__905231973>;
+    bids :
+      Map__386906547<RoomId__787466293,
+                      Map__386906547<NominationId__796958695,
+                                      List__89170296<Bid__660799574>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom : Map__386906547<RoomId__787466293, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__787466293,
+                      Map__386906547<NominationId__796958695,
+                                      List__89170296<BidHistoryEvent__119369364>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__796958695, Nomination__647470915>;
+    nominationsByRoom :
+      Map__386906547<RoomId__787466293, [NominationId__796958695]>;
+    notificationQueue : List__89170296<PendingNotification__436155113>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__787466293,
+                      Map__386906547<UserId__905231973,
+                                      NewParticipant__757312452>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__809525749>>;
+    players : Map__386906547<Text, Player__665064623>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__905231973, UserProfile__651552695>;
+    proxyBids :
+      Map__386906547<RoomId__787466293,
+                      Map__386906547<NominationId__796958695,
+                                      Map__386906547<UserId__905231973,
+                                                      ProxyBid__1071005602>>>;
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__787466293,
+                      List__89170296<ChatMessage__824836617>>;
+    rooms : Map__386906547<RoomId__787466293, NewRoom__721081382>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__905231973, List__89170296<RoomId__787466293>>
+  };
+type NewParticipant__757312452 =
+  {
+    budget : Nat;
+    committed : [(NominationId__796958695, Nat)];
+    displayName : Text;
+    skipNominationTurn : Bool;
+    spent : Nat;
+    userId : UserId__905231973;
+    wonPlayers : [NewWonPlayer__900084309]
+  };
+type NewRoom__316196905 =
+  {
+    admin : UserId__489994765;
+    createdAt : Timestamp__453886411;
+    id : RoomId__5663043;
+    isPublic : Bool;
+    leagueFormat : ?Text;
+    name : Text;
+    nominationTurnPausedAt : ?Timestamp__453886411;
+    nominationTurnStartedAt : Timestamp__453886411;
+    nominatorIndex : Nat;
+    paidParticipants : [UserId__489994765];
+    participants : [UserId__489994765];
+    password : ?Text;
+    playerFilter : PlayerFilter__846925848;
+    readyParticipants : [UserId__489994765];
+    rosterSettings : ?RosterSettings__151063622;
+    scoringFormat : ScoringFormat__735281482;
+    season : Nat;
+    settings : AuctionSettings__626367178;
+    startingBudget : Nat;
+    state : AuctionState__881530286;
+    teamCount : ?Nat
+  };
+type NewRoom__721081382 =
+  {
+    admin : UserId__905231973;
+    createdAt : Timestamp__370930425;
+    id : RoomId__787466293;
+    isPublic : Bool;
+    leagueFormat : ?Text;
+    name : Text;
+    nominationTurnPausedAt : ?Timestamp__370930425;
+    nominationTurnStartedAt : Timestamp__370930425;
+    nominatorIndex : Nat;
+    paidParticipants : [UserId__905231973];
+    participants : [UserId__905231973];
+    password : ?Text;
+    playerFilter : PlayerFilter__691558955;
+    readyParticipants : [UserId__905231973];
+    rosterSettings : ?RosterSettings__822862962;
+    scoringType : ?Text;
+    settings : AuctionSettings__593156911;
+    startingBudget : Nat;
+    state : AuctionState__295758533;
+    teamCount : ?Nat
+  };
+type NewWeeklyPlayerStats__1072445382 =
+  {
+    fumblesLost : Nat;
+    ints : Nat;
+    passTds : Nat;
+    passYds : Int;
+    playerId : Text;
+    recTds : Nat;
+    recYds : Int;
+    receptions : Nat;
+    rushTds : Nat;
+    rushYds : Int;
+    season : Nat;
+    twoPtConversions : Nat;
+    week : Nat
+  };
+type NewWonPlayer__900084309 =
+  {
+    byeWeek : ?Nat;
+    closedAt : Timestamp__370930425;
+    nominatedBy : UserId__905231973;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    team : Text;
+    winningBid : Nat
+  };
+type Node__1045371124<T> =
+  {#internal : Internal__778364379<T>; #leaf : Leaf__776840865<T>};
+type Node__430031793<K, V> =
+  {#internal : Internal__161573640<K, V>; #leaf : Leaf__1045638083<K, V>};
+type NominationId__185636755 = Nat;
+type NominationId__399724947 = Nat;
+type NominationId__461430578 = NominationId__185636755;
+type NominationId__580595011 = Nat;
+type NominationId__588766278 = Nat;
+type NominationId__736744392 = Nat;
+type NominationId__739815190 = Nat;
+type NominationId__796958695 = Nat;
+type NominationId__934590375 = Nat;
+type NominationId__986388539 = Nat;
+type NominationState__1033849754 = {#Active; #Closed; #Expired};
+type NominationState__1061743101 = {#Active; #Closed; #Expired};
+type NominationState__230512131 = {#Active; #Closed; #Expired};
+type NominationState__372727627 = {#Active; #Closed; #Expired};
+type NominationState__463113330 = {#Active; #Closed; #Expired};
+type NominationState__483243560 = {#Active; #Closed; #Expired};
+type NominationState__523959864 = {#Active; #Closed; #Expired};
+type NominationState__606933044 = {#Active; #Closed; #Expired};
+type NominationState__643500975 = {#Active; #Closed; #Expired};
+type Nomination__156987796 =
+  {
+    bidLeader : ?UserId__624852056;
+    currentBid : Nat;
+    id : NominationId__736744392;
+    imageUrl : ?Text;
+    nominatedBy : UserId__624852056;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__217933440;
+    state : NominationState__1033849754;
+    team : Text;
+    timerDurationSecs : Nat;
+    timerElapsedSecs : Nat;
+    timerPausedAt : ?Timestamp__443237239;
+    timerStartedAt : Timestamp__443237239
+  };
+type Nomination__28319590 =
+  {
+    bidLeader : ?UserId__810201388;
+    currentBid : Nat;
+    id : NominationId__580595011;
+    imageUrl : ?Text;
+    nominatedBy : UserId__810201388;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__338327646;
+    state : NominationState__1061743101;
+    team : Text;
+    timerDurationSecs : Nat;
+    timerElapsedSecs : Nat;
+    timerPausedAt : ?Timestamp__296422864;
+    timerStartedAt : Timestamp__296422864
+  };
+type Nomination__521905191 =
+  {
+    bidLeader : ?UserId__489994765;
+    currentBid : Nat;
+    id : NominationId__739815190;
+    imageUrl : ?Text;
+    nominatedBy : UserId__489994765;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__5663043;
+    state : NominationState__230512131;
+    team : Text;
+    timerDurationSecs : Nat;
+    timerElapsedSecs : Nat;
+    timerPausedAt : ?Timestamp__453886411;
+    timerStartedAt : Timestamp__453886411
+  };
+type Nomination__582568800 =
+  {
+    bidLeader : ?UserId__719351118;
+    currentBid : Nat;
+    id : NominationId__461430578;
+    imageUrl : ?Text;
+    nominatedBy : UserId__719351118;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__30709683;
+    state : NominationState__483243560;
+    team : Text;
+    timerDurationSecs : Nat;
+    timerElapsedSecs : Nat;
+    timerPausedAt : ?Timestamp__937470241;
+    timerStartedAt : Timestamp__937470241
+  };
+type Nomination__608384635 =
+  {
+    bidLeader : ?UserId__899134035;
+    currentBid : Nat;
+    id : NominationId__934590375;
+    imageUrl : ?Text;
+    nominatedBy : UserId__899134035;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__1034792333;
+    state : NominationState__643500975;
+    team : Text;
+    timerDurationSecs : Nat;
+    timerElapsedSecs : Nat;
+    timerPausedAt : ?Timestamp__988901252;
+    timerStartedAt : Timestamp__988901252
+  };
+type Nomination__6400755 =
+  {
+    bidLeader : ?UserId__248585693;
+    currentBid : Nat;
+    id : NominationId__588766278;
+    imageUrl : ?Text;
+    nominatedBy : UserId__248585693;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__820301545;
+    state : NominationState__463113330;
+    team : Text;
+    timerDurationSecs : Nat;
+    timerElapsedSecs : Nat;
+    timerPausedAt : ?Timestamp__866031271;
+    timerStartedAt : Timestamp__866031271
+  };
+type Nomination__647470915 =
+  {
+    bidLeader : ?UserId__905231973;
+    currentBid : Nat;
+    id : NominationId__796958695;
+    imageUrl : ?Text;
+    nominatedBy : UserId__905231973;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__787466293;
+    state : NominationState__372727627;
+    team : Text;
+    timerDurationSecs : Nat;
+    timerElapsedSecs : Nat;
+    timerPausedAt : ?Timestamp__370930425;
+    timerStartedAt : Timestamp__370930425
+  };
+type Nomination__664308577 =
+  {
+    bidLeader : ?UserId__946967140;
+    currentBid : Nat;
+    id : NominationId__399724947;
+    imageUrl : ?Text;
+    nominatedBy : UserId__946967140;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__1016577012;
+    state : NominationState__523959864;
+    team : Text;
+    timerDurationSecs : Nat;
+    timerElapsedSecs : Nat;
+    timerPausedAt : ?Timestamp__80247937;
+    timerStartedAt : Timestamp__80247937
+  };
+type Nomination__932914625 =
+  {
+    bidLeader : ?UserId__617304325;
+    currentBid : Nat;
+    id : NominationId__986388539;
+    imageUrl : ?Text;
+    nominatedBy : UserId__617304325;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__137466762;
+    state : NominationState__606933044;
+    team : Text;
+    timerDurationSecs : Nat;
+    timerElapsedSecs : Nat;
+    timerPausedAt : ?Timestamp__253305079;
+    timerStartedAt : Timestamp__253305079
+  };
+type OldActor__147103740 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__48208444>;
+    activeRoomIds : Set__195681557<RoomId__217933440>;
+    adminPrincipalStore : Map__386906547<Text, UserId__624852056>;
+    bids :
+      Map__386906547<RoomId__217933440,
+                      Map__386906547<NominationId__736744392,
+                                      List__89170296<Bid__785283987>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom : Map__386906547<RoomId__217933440, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__217933440,
+                      Map__386906547<NominationId__736744392,
+                                      List__89170296<BidHistoryEvent__198339331>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__736744392, Nomination__156987796>;
+    nominationsByRoom :
+      Map__386906547<RoomId__217933440, [NominationId__736744392]>;
+    notificationQueue : List__89170296<PendingNotification__682667126>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__217933440,
+                      Map__386906547<UserId__624852056,
+                                      Participant__1015404222>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__613524624>>;
+    players : Map__386906547<Text, Player__1019825387>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__624852056, UserProfile__51888098>;
+    proxyBids :
+      Map__386906547<RoomId__217933440,
+                      Map__386906547<NominationId__736744392,
+                                      Map__386906547<UserId__624852056,
+                                                      ProxyBid__115992688>>>;
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__217933440,
+                      List__89170296<ChatMessage__344529175>>;
+    rooms : Map__386906547<RoomId__217933440, Room__133130135>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__624852056, List__89170296<RoomId__217933440>>
+  };
+type OldActor__214185805 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__1027473566>;
+    activeRoomIds : Set__195681557<RoomId__1034792333>;
+    adminPrincipalStore : Map__386906547<Text, UserId__899134035>;
+    bestBallConfigs :
+      Map__386906547<RoomId__1034792333, BestBallConfig__900406101>;
+    bids :
+      Map__386906547<RoomId__1034792333,
+                      Map__386906547<NominationId__934590375,
+                                      List__89170296<Bid__611652826>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    draftedPlayerIds :
+      Map__386906547<RoomId__1034792333, Set__195681557<Text>>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom :
+      Map__386906547<RoomId__1034792333, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__1034792333,
+                      Map__386906547<NominationId__934590375,
+                                      List__89170296<BidHistoryEvent__142582416>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__934590375, Nomination__608384635>;
+    nominationsByRoom :
+      Map__386906547<RoomId__1034792333, [NominationId__934590375]>;
+    notificationQueue : List__89170296<PendingNotification__748907421>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__1034792333,
+                      Map__386906547<UserId__899134035,
+                                      Participant__915480590>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__132410633>>;
+    players : Map__386906547<Text, Player__967680300>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__899134035, UserProfile__965880994>;
+    proxyBids :
+      Map__386906547<RoomId__1034792333,
+                      Map__386906547<NominationId__934590375,
+                                      Map__386906547<UserId__899134035,
+                                                      ProxyBid__1013535168>>>;
+    recoveryAttempts : Map__386906547<Text, RecoveryAttempt__882605391>;
+    recoveryPasswordHash : {var value : ?Text};
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__1034792333,
+                      List__89170296<ChatMessage__399925406>>;
+    rooms : Map__386906547<RoomId__1034792333, Room__895051986>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__899134035, List__89170296<RoomId__1034792333>>
+  };
+type OldActor__220611212 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__917637605>;
+    activeRoomIds : Set__195681557<RoomId__787466293>;
+    adminPrincipalStore : Map__386906547<Text, UserId__905231973>;
+    bids :
+      Map__386906547<RoomId__787466293,
+                      Map__386906547<NominationId__796958695,
+                                      List__89170296<Bid__660799574>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom : Map__386906547<RoomId__787466293, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__787466293,
+                      Map__386906547<NominationId__796958695,
+                                      List__89170296<BidHistoryEvent__119369364>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__796958695, Nomination__647470915>;
+    notificationQueue : List__89170296<PendingNotification__436155113>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__787466293,
+                      Map__386906547<UserId__905231973,
+                                      OldParticipant__915516486>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__809525749>>;
+    players : Map__386906547<Text, Player__665064623>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__905231973, UserProfile__651552695>;
+    proxyBids :
+      Map__386906547<RoomId__787466293,
+                      Map__386906547<NominationId__796958695,
+                                      Map__386906547<UserId__905231973,
+                                                      ProxyBid__1071005602>>>;
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__787466293,
+                      List__89170296<ChatMessage__824836617>>;
+    rooms : Map__386906547<RoomId__787466293, OldRoom__3613538>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__905231973, List__89170296<RoomId__787466293>>
+  };
+type OldActor__684614728 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__176415502>;
+    activeRoomIds : Set__195681557<RoomId__1016577012>;
+    adminPrincipalStore : Map__386906547<Text, UserId__946967140>;
+    bids :
+      Map__386906547<RoomId__1016577012,
+                      Map__386906547<NominationId__399724947,
+                                      List__89170296<Bid__723906477>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom :
+      Map__386906547<RoomId__1016577012, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__1016577012,
+                      Map__386906547<NominationId__399724947,
+                                      List__89170296<BidHistoryEvent__42991241>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__399724947, Nomination__664308577>;
+    nominationsByRoom :
+      Map__386906547<RoomId__1016577012, [NominationId__399724947]>;
+    notificationQueue : List__89170296<PendingNotification__965105022>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__1016577012,
+                      Map__386906547<UserId__946967140,
+                                      Participant__811998025>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__724309324>>;
+    players : Map__386906547<Text, Player__311646412>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__946967140, UserProfile__935299759>;
+    proxyBids :
+      Map__386906547<RoomId__1016577012,
+                      Map__386906547<NominationId__399724947,
+                                      Map__386906547<UserId__946967140,
+                                                      ProxyBid__712769868>>>;
+    recoveryAttempts : Map__386906547<Text, RecoveryAttempt__689766172>;
+    recoveryPasswordHash : {var value : ?Text};
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__1016577012,
+                      List__89170296<ChatMessage__642255733>>;
+    rooms : Map__386906547<RoomId__1016577012, Room__7804569>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__946967140, List__89170296<RoomId__1016577012>>
+  };
+type OldActor__720724081 =
+  {
+    MAX_NOTIFICATIONS_PER_RUN : Nat;
+    MAX_NOTIFICATION_BODY_LENGTH : Nat;
+    MAX_NOTIFICATION_PROCESSING_NANOS : Nat;
+    MAX_QUEUE_SIZE : Nat;
+    MAX_SEND_ATTEMPTS : Nat;
+    NOTIFICATION_EXPIRY_NANOS : Nat;
+    _heartbeatTimer : Nat;
+    activeAdpDataset : Map__386906547<Text, ADPDataset__990193024>;
+    activeRoomIds : Set__195681557<RoomId__338327646>;
+    adminPrincipalStore : Map__386906547<Text, UserId__810201388>;
+    bids :
+      Map__386906547<RoomId__338327646,
+                      Map__386906547<NominationId__580595011,
+                                      List__89170296<Bid__34904740>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    cycleBalanceHistory : {var samples : [(Nat, Nat)]};
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    var heartbeatRunning : Bool;
+    heartbeatTickCount : {var count : Nat};
+    lastCycleSnapshotNs : {var timestamp : Nat};
+    lastHeartbeatTickAt : {var value : Int};
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom : Map__386906547<RoomId__338327646, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__338327646,
+                      Map__386906547<NominationId__580595011,
+                                      List__89170296<BidHistoryEvent__610208606>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__580595011, Nomination__28319590>;
+    notificationQueue : List__89170296<PendingNotification__430386039>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__338327646,
+                      Map__386906547<UserId__810201388,
+                                      Participant__807434318>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__431858672>>;
+    players : Map__386906547<Text, Player__483876038>;
+    var processingNotifications : Bool;
+    profiles : Map__386906547<UserId__810201388, UserProfile__674434911>;
+    proxyBids :
+      Map__386906547<RoomId__338327646,
+                      Map__386906547<NominationId__580595011,
+                                      Map__386906547<UserId__810201388,
+                                                      ProxyBid__624584715>>>;
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__338327646,
+                      List__89170296<ChatMessage__461964461>>;
+    rooms : Map__386906547<RoomId__338327646, Room__272010871>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__810201388, List__89170296<RoomId__338327646>>
+  };
+type OldActor__812199013 = {};
+type OldActor__837661173 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__590946307>;
+    activeRoomIds : Set__195681557<RoomId__137466762>;
+    adminPrincipalStore : Map__386906547<Text, UserId__617304325>;
+    bestBallConfigs :
+      Map__386906547<RoomId__137466762, BestBallConfig__693850428>;
+    bids :
+      Map__386906547<RoomId__137466762,
+                      Map__386906547<NominationId__986388539,
+                                      List__89170296<Bid__437135410>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    draftedPlayerIds :
+      Map__386906547<RoomId__137466762, Set__195681557<Text>>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom : Map__386906547<RoomId__137466762, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__137466762,
+                      Map__386906547<NominationId__986388539,
+                                      List__89170296<BidHistoryEvent__563061454>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__986388539, Nomination__932914625>;
+    nominationsByRoom :
+      Map__386906547<RoomId__137466762, [NominationId__986388539]>;
+    notificationQueue : List__89170296<PendingNotification__853963565>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__137466762,
+                      Map__386906547<UserId__617304325,
+                                      Participant__466548478>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__206439393>>;
+    players : Map__386906547<Text, Player__243464184>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__617304325, UserProfile__254051766>;
+    proxyBids :
+      Map__386906547<RoomId__137466762,
+                      Map__386906547<NominationId__986388539,
+                                      Map__386906547<UserId__617304325,
+                                                      ProxyBid__486780895>>>;
+    recoveryAttempts : Map__386906547<Text, RecoveryAttempt__70994733>;
+    recoveryPasswordHash : {var value : ?Text};
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__137466762,
+                      List__89170296<ChatMessage__343557596>>;
+    rooms : Map__386906547<RoomId__137466762, Room__240238141>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__617304325, List__89170296<RoomId__137466762>>;
+    weeklyPlayerStats : Map__386906547<Text, OldWeeklyPlayerStats__909414166>
+  };
+type OldActor__910994591 =
+  {
+    activeAdpDataset : Map__386906547<Text, ADPDataset__562754287>;
+    activeRoomIds : Set__195681557<RoomId__5663043>;
+    adminPrincipalStore : Map__386906547<Text, UserId__489994765>;
+    bids :
+      Map__386906547<RoomId__5663043,
+                      Map__386906547<NominationId__739815190,
+                                      List__89170296<Bid__1028760386>>>;
+    byeWeeksStore : Map__386906547<Text, [(Text, Nat)]>;
+    draftedPlayerIds : Map__386906547<RoomId__5663043, Set__195681557<Text>>;
+    giphyApiKeyStore : Map__386906547<Text, Text>;
+    lastNotificationWorkerCompletedAt : {var value : Int};
+    lastNotificationWorkerError : {var error : ?Text};
+    lastNotificationWorkerStartedAt : {var value : Int};
+    lastRssFetchStatus : {var status : [(Text, Bool)]};
+    nextMsgIdState : {var next : Nat};
+    nextNominationIdState : {var next : Nat};
+    nextNotificationId : {var next : Nat};
+    nominatedByRoom : Map__386906547<RoomId__5663043, Set__195681557<Text>>;
+    nominationHistory :
+      Map__386906547<RoomId__5663043,
+                      Map__386906547<NominationId__739815190,
+                                      List__89170296<BidHistoryEvent__228554829>>>;
+    nominationQueue : Map__386906547<Text, Text>;
+    nominations :
+      Map__386906547<NominationId__739815190, Nomination__521905191>;
+    nominationsByRoom :
+      Map__386906547<RoomId__5663043, [NominationId__739815190]>;
+    notificationQueue : List__89170296<PendingNotification__987401484>;
+    notificationWorkerEntryCount : {var count : Nat};
+    notificationsExpiredTotal : {var count : Nat};
+    notificationsFailedTotal : {var count : Nat};
+    notificationsProcessedTotal : {var count : Nat};
+    notificationsQueuedTotal : {var count : Nat};
+    notificationsRetriedTotal : {var count : Nat};
+    notificationsSentTotal : {var count : Nat};
+    oneSignalApiKeyStore : Map__386906547<Text, Text>;
+    oneSignalPlayerIds : Map__386906547<Text, Text>;
+    participants :
+      Map__386906547<RoomId__5663043,
+                      Map__386906547<UserId__489994765,
+                                      Participant__912216647>>;
+    playerPriceHistory :
+      Map__386906547<Text, List__89170296<PlayerPriceRecord__509422627>>;
+    players : Map__386906547<Text, Player__738823405>;
+    processingNotifications : {var value : Bool};
+    profiles : Map__386906547<UserId__489994765, UserProfile__955926780>;
+    proxyBids :
+      Map__386906547<RoomId__5663043,
+                      Map__386906547<NominationId__739815190,
+                                      Map__386906547<UserId__489994765,
+                                                      ProxyBid__41195042>>>;
+    recoveryAttempts : Map__386906547<Text, RecoveryAttempt__274233928>;
+    recoveryPasswordHash : {var value : ?Text};
+    roomIdState : {var next : Nat};
+    roomMessages :
+      Map__386906547<RoomId__5663043, List__89170296<ChatMessage__830159703>>;
+    rooms : Map__386906547<RoomId__5663043, OldRoom__1057546503>;
+    rssCacheContent : {var content : ?Text};
+    rssCacheTimestamp : {var timestamp : Nat};
+    rssFeedUrlsStore : Map__386906547<Text, [Text]>;
+    rssRefreshIntervalSecs : {var seconds : Nat};
+    userRooms :
+      Map__386906547<UserId__489994765, List__89170296<RoomId__5663043>>
+  };
+type OldParticipant__915516486 =
+  {
+    budget : Nat;
+    committed : [(NominationId__796958695, Nat)];
+    displayName : Text;
+    spent : Nat;
+    userId : UserId__905231973;
+    wonPlayers : [OldWonPlayer__747141984]
+  };
+type OldRoom__1057546503 =
+  {
+    admin : UserId__489994765;
+    createdAt : Timestamp__453886411;
+    id : RoomId__5663043;
+    isPublic : Bool;
+    leagueFormat : ?Text;
+    name : Text;
+    nominationTurnPausedAt : ?Timestamp__453886411;
+    nominationTurnStartedAt : Timestamp__453886411;
+    nominatorIndex : Nat;
+    paidParticipants : [UserId__489994765];
+    participants : [UserId__489994765];
+    password : ?Text;
+    playerFilter : PlayerFilter__846925848;
+    readyParticipants : [UserId__489994765];
+    rosterSettings : ?RosterSettings__151063622;
+    scoringType : ?Text;
+    settings : AuctionSettings__626367178;
+    startingBudget : Nat;
+    state : AuctionState__881530286;
+    teamCount : ?Nat
+  };
+type OldRoom__3613538 =
+  {
+    admin : UserId__905231973;
+    createdAt : Timestamp__370930425;
+    id : RoomId__787466293;
+    isPublic : Bool;
+    leagueFormat : ?Text;
+    name : Text;
+    nominationTurnPausedAt : ?Timestamp__370930425;
+    nominationTurnStartedAt : Timestamp__370930425;
+    nominatorIndex : Nat;
+    participants : [UserId__905231973];
+    password : ?Text;
+    playerFilter : PlayerFilter__691558955;
+    readyParticipants : [UserId__905231973];
+    rosterSettings : ?RosterSettings__822862962;
+    scoringType : ?Text;
+    settings : AuctionSettings__593156911;
+    startingBudget : Nat;
+    state : AuctionState__295758533;
+    teamCount : ?Nat
+  };
+type OldWeeklyPlayerStats__909414166 =
+  {
+    fumblesLost : Nat;
+    ints : Nat;
+    passTds : Nat;
+    passYds : Nat;
+    playerId : Text;
+    recTds : Nat;
+    recYds : Nat;
+    receptions : Nat;
+    rushTds : Nat;
+    rushYds : Nat;
+    season : Nat;
+    twoPtConversions : Nat;
+    week : Nat
+  };
+type OldWonPlayer__747141984 =
+  {
+    closedAt : Timestamp__370930425;
+    nominatedBy : UserId__905231973;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    team : Text;
+    winningBid : Nat
+  };
+type Participant__1015404222 =
+  {
+    budget : Nat;
+    committed : [(NominationId__736744392, Nat)];
+    displayName : Text;
+    skipNominationTurn : Bool;
+    spent : Nat;
+    userId : UserId__624852056;
+    wonPlayers : [WonPlayer__968383225]
+  };
+type Participant__262301330 =
+  {
+    budget : Nat;
+    committed : [(NominationId__588766278, Nat)];
+    displayName : Text;
+    spent : Nat;
+    userId : UserId__248585693;
+    wonPlayers : [WonPlayer__135894923]
+  };
+type Participant__466548478 =
+  {
+    budget : Nat;
+    committed : [(NominationId__986388539, Nat)];
+    displayName : Text;
+    skipNominationTurn : Bool;
+    spent : Nat;
+    userId : UserId__617304325;
+    wonPlayers : [WonPlayer__202134953]
+  };
+type Participant__807434318 =
+  {
+    budget : Nat;
+    committed : [(NominationId__580595011, Nat)];
+    displayName : Text;
+    spent : Nat;
+    userId : UserId__810201388;
+    wonPlayers : [WonPlayer__863520342]
+  };
+type Participant__811998025 =
+  {
+    budget : Nat;
+    committed : [(NominationId__399724947, Nat)];
+    displayName : Text;
+    skipNominationTurn : Bool;
+    spent : Nat;
+    userId : UserId__946967140;
+    wonPlayers : [WonPlayer__79523215]
+  };
+type Participant__845119468 =
+  {
+    budget : Nat;
+    committed : [(NominationId__461430578, Nat)];
+    displayName : Text;
+    skipNominationTurn : Bool;
+    spent : Nat;
+    userId : UserId__719351118;
+    wonPlayers : [WonPlayer__277343058]
+  };
+type Participant__912216647 =
+  {
+    budget : Nat;
+    committed : [(NominationId__739815190, Nat)];
+    displayName : Text;
+    skipNominationTurn : Bool;
+    spent : Nat;
+    userId : UserId__489994765;
+    wonPlayers : [WonPlayer__1046240868]
+  };
+type Participant__915480590 =
+  {
+    budget : Nat;
+    committed : [(NominationId__934590375, Nat)];
+    displayName : Text;
+    skipNominationTurn : Bool;
+    spent : Nat;
+    userId : UserId__899134035;
+    wonPlayers : [WonPlayer__908768236]
+  };
+type PendingNotification__430386039 =
+  {
+    attempts : Nat;
+    body : Text;
+    createdAt : Timestamp__296422864;
+    id : Nat;
+    title : Text;
+    userId : UserId__810201388
+  };
+type PendingNotification__436155113 =
+  {
+    attempts : Nat;
+    body : Text;
+    createdAt : Timestamp__370930425;
+    id : Nat;
+    title : Text;
+    userId : UserId__905231973
+  };
+type PendingNotification__682667126 =
+  {
+    attempts : Nat;
+    body : Text;
+    createdAt : Timestamp__443237239;
+    id : Nat;
+    title : Text;
+    userId : UserId__624852056
+  };
+type PendingNotification__748907421 =
+  {
+    attempts : Nat;
+    body : Text;
+    createdAt : Timestamp__988901252;
+    id : Nat;
+    title : Text;
+    userId : UserId__899134035
+  };
+type PendingNotification__853963565 =
+  {
+    attempts : Nat;
+    body : Text;
+    createdAt : Timestamp__253305079;
+    id : Nat;
+    title : Text;
+    userId : UserId__617304325
+  };
+type PendingNotification__89232765 =
+  {
+    attempts : Nat;
+    body : Text;
+    createdAt : Timestamp__937470241;
+    id : Nat;
+    title : Text;
+    userId : UserId__719351118
+  };
+type PendingNotification__957081670 =
+  {
+    attempts : Nat;
+    body : Text;
+    createdAt : Timestamp__866031271;
+    id : Nat;
+    title : Text;
+    userId : UserId__248585693
+  };
+type PendingNotification__965105022 =
+  {
+    attempts : Nat;
+    body : Text;
+    createdAt : Timestamp__80247937;
+    id : Nat;
+    title : Text;
+    userId : UserId__946967140
+  };
+type PendingNotification__987401484 =
+  {
+    attempts : Nat;
+    body : Text;
+    createdAt : Timestamp__453886411;
+    id : Nat;
+    title : Text;
+    userId : UserId__489994765
+  };
+type PlayerFilter__1048517866 = {filterType : Text; positions : [Text]};
+type PlayerFilter__183568986 = {filterType : Text; positions : [Text]};
+type PlayerFilter__442686492 = {filterType : Text; positions : [Text]};
+type PlayerFilter__509681171 = {filterType : Text; positions : [Text]};
+type PlayerFilter__691558955 = {filterType : Text; positions : [Text]};
+type PlayerFilter__732897767 = {filterType : Text; positions : [Text]};
+type PlayerFilter__846925848 = {filterType : Text; positions : [Text]};
+type PlayerFilter__89879891 = {filterType : Text; positions : [Text]};
+type PlayerFilter__976063364 = {filterType : Text; positions : [Text]};
+type PlayerPriceRecord__132410633 =
+  {
+    budgetPct : Float;
+    closedAt : Timestamp__988901252;
+    leagueType : Text;
+    numTeams : Nat;
+    playerId : ?Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__1034792333;
+    totalBudget : Nat;
+    winningBid : Nat;
+    winningUserId : UserId__899134035
+  };
+type PlayerPriceRecord__206439393 =
+  {
+    budgetPct : Float;
+    closedAt : Timestamp__253305079;
+    leagueType : Text;
+    numTeams : Nat;
+    playerId : ?Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__137466762;
+    totalBudget : Nat;
+    winningBid : Nat;
+    winningUserId : UserId__617304325
+  };
+type PlayerPriceRecord__431858672 =
+  {
+    budgetPct : Float;
+    closedAt : Timestamp__296422864;
+    leagueType : Text;
+    numTeams : Nat;
+    playerId : ?Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__338327646;
+    totalBudget : Nat;
+    winningBid : Nat;
+    winningUserId : UserId__810201388
+  };
+type PlayerPriceRecord__509422627 =
+  {
+    budgetPct : Float;
+    closedAt : Timestamp__453886411;
+    leagueType : Text;
+    numTeams : Nat;
+    playerId : ?Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__5663043;
+    totalBudget : Nat;
+    winningBid : Nat;
+    winningUserId : UserId__489994765
+  };
+type PlayerPriceRecord__613524624 =
+  {
+    budgetPct : Float;
+    closedAt : Timestamp__443237239;
+    leagueType : Text;
+    numTeams : Nat;
+    playerId : ?Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__217933440;
+    totalBudget : Nat;
+    winningBid : Nat;
+    winningUserId : UserId__624852056
+  };
+type PlayerPriceRecord__620937694 =
+  {
+    budgetPct : Float;
+    closedAt : Timestamp__937470241;
+    leagueType : Text;
+    numTeams : Nat;
+    playerId : ?Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__30709683;
+    totalBudget : Nat;
+    winningBid : Nat;
+    winningUserId : UserId__719351118
+  };
+type PlayerPriceRecord__724309324 =
+  {
+    budgetPct : Float;
+    closedAt : Timestamp__80247937;
+    leagueType : Text;
+    numTeams : Nat;
+    playerId : ?Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__1016577012;
+    totalBudget : Nat;
+    winningBid : Nat;
+    winningUserId : UserId__946967140
+  };
+type PlayerPriceRecord__809525749 =
+  {
+    budgetPct : Float;
+    closedAt : Timestamp__370930425;
+    leagueType : Text;
+    numTeams : Nat;
+    playerId : ?Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__787466293;
+    totalBudget : Nat;
+    winningBid : Nat;
+    winningUserId : UserId__905231973
+  };
+type PlayerPriceRecord__985375560 =
+  {
+    budgetPct : Float;
+    closedAt : Timestamp__866031271;
+    leagueType : Text;
+    numTeams : Nat;
+    playerId : ?Text;
+    playerName : Text;
+    position : Text;
+    roomId : RoomId__820301545;
+    totalBudget : Nat;
+    winningBid : Nat;
+    winningUserId : UserId__248585693
+  };
+type Player__1019825387 =
+  {
+    adp : Float;
+    byeWeek : ?Nat;
+    headshotUrl : ?Text;
+    id : Text;
+    name : Text;
+    position : Text;
+    team : Text;
+    yearsExp : Nat
+  };
+type Player__243464184 =
+  {
+    adp : Float;
+    byeWeek : ?Nat;
+    headshotUrl : ?Text;
+    id : Text;
+    name : Text;
+    position : Text;
+    team : Text;
+    yearsExp : Nat
+  };
+type Player__274770166 =
+  {
+    adp : Float;
+    byeWeek : ?Nat;
+    headshotUrl : ?Text;
+    id : Text;
+    name : Text;
+    position : Text;
+    team : Text;
+    yearsExp : Nat
+  };
+type Player__311646412 =
+  {
+    adp : Float;
+    byeWeek : ?Nat;
+    headshotUrl : ?Text;
+    id : Text;
+    name : Text;
+    position : Text;
+    team : Text;
+    yearsExp : Nat
+  };
+type Player__483876038 =
+  {
+    adp : Float;
+    byeWeek : ?Nat;
+    headshotUrl : ?Text;
+    id : Text;
+    name : Text;
+    position : Text;
+    team : Text;
+    yearsExp : Nat
+  };
+type Player__665064623 =
+  {
+    adp : Float;
+    byeWeek : ?Nat;
+    headshotUrl : ?Text;
+    id : Text;
+    name : Text;
+    position : Text;
+    team : Text;
+    yearsExp : Nat
+  };
+type Player__738823405 =
+  {
+    adp : Float;
+    byeWeek : ?Nat;
+    headshotUrl : ?Text;
+    id : Text;
+    name : Text;
+    position : Text;
+    team : Text;
+    yearsExp : Nat
+  };
+type Player__740320691 =
+  {
+    adp : Float;
+    byeWeek : ?Nat;
+    headshotUrl : ?Text;
+    id : Text;
+    name : Text;
+    position : Text;
+    team : Text;
+    yearsExp : Nat
+  };
+type Player__967680300 =
+  {
+    adp : Float;
+    byeWeek : ?Nat;
+    headshotUrl : ?Text;
+    id : Text;
+    name : Text;
+    position : Text;
+    team : Text;
+    yearsExp : Nat
+  };
+type ProxyBid__1013535168 =
+  {
+    maxBid : Nat;
+    nominationId : NominationId__934590375;
+    userId : UserId__899134035
+  };
+type ProxyBid__1071005602 =
+  {
+    maxBid : Nat;
+    nominationId : NominationId__796958695;
+    userId : UserId__905231973
+  };
+type ProxyBid__115992688 =
+  {
+    maxBid : Nat;
+    nominationId : NominationId__736744392;
+    userId : UserId__624852056
+  };
+type ProxyBid__41195042 =
+  {
+    maxBid : Nat;
+    nominationId : NominationId__739815190;
+    userId : UserId__489994765
+  };
+type ProxyBid__486780895 =
+  {
+    maxBid : Nat;
+    nominationId : NominationId__986388539;
+    userId : UserId__617304325
+  };
+type ProxyBid__495159277 =
+  {
+    maxBid : Nat;
+    nominationId : NominationId__588766278;
+    userId : UserId__248585693
+  };
+type ProxyBid__602740948 =
+  {
+    maxBid : Nat;
+    nominationId : NominationId__461430578;
+    userId : UserId__719351118
+  };
+type ProxyBid__624584715 =
+  {
+    maxBid : Nat;
+    nominationId : NominationId__580595011;
+    userId : UserId__810201388
+  };
+type ProxyBid__712769868 =
+  {
+    maxBid : Nat;
+    nominationId : NominationId__399724947;
+    userId : UserId__946967140
+  };
+type RecoveryAttempt__274233928 =
+  {count : Nat; lockedUntil : ?Timestamp__453886411};
+type RecoveryAttempt__599169423 =
+  {count : Nat; lockedUntil : ?Timestamp__756994130};
+type RecoveryAttempt__689766172 =
+  {count : Nat; lockedUntil : ?Timestamp__80247937};
+type RecoveryAttempt__708822965 =
+  {count : Nat; lockedUntil : ?Timestamp__443237239};
+type RecoveryAttempt__70994733 =
+  {count : Nat; lockedUntil : ?Timestamp__253305079};
+type RecoveryAttempt__882605391 =
+  {count : Nat; lockedUntil : ?Timestamp__988901252};
+type RoomId__1016577012 = Text;
+type RoomId__1034792333 = Text;
+type RoomId__137466762 = Text;
+type RoomId__217933440 = Text;
+type RoomId__30709683 = RoomId__905989824;
+type RoomId__338327646 = Text;
+type RoomId__5663043 = Text;
+type RoomId__787466293 = Text;
+type RoomId__820301545 = Text;
+type RoomId__905989824 = Text;
+type Room__1035395216 =
+  {
+    admin : UserId__719351118;
+    createdAt : Timestamp__937470241;
+    id : RoomId__30709683;
+    isPublic : Bool;
+    leagueFormat : ?Text;
+    name : Text;
+    nominationTurnPausedAt : ?Timestamp__937470241;
+    nominationTurnStartedAt : Timestamp__937470241;
+    nominatorIndex : Nat;
+    paidParticipants : [UserId__719351118];
+    participants : [UserId__719351118];
+    password : ?Text;
+    playerFilter : PlayerFilter__732897767;
+    readyParticipants : [UserId__719351118];
+    rosterSettings : ?RosterSettings__1021833870;
+    scoringFormat : ScoringFormat__993904421;
+    season : Nat;
+    settings : AuctionSettings__688438015;
+    startingBudget : Nat;
+    state : AuctionState__112870982;
+    teamCount : ?Nat
+  };
+type Room__133130135 =
+  {
+    admin : UserId__624852056;
+    createdAt : Timestamp__443237239;
+    id : RoomId__217933440;
+    isPublic : Bool;
+    leagueFormat : ?Text;
+    name : Text;
+    nominationTurnPausedAt : ?Timestamp__443237239;
+    nominationTurnStartedAt : Timestamp__443237239;
+    nominatorIndex : Nat;
+    paidParticipants : [UserId__624852056];
+    participants : [UserId__624852056];
+    password : ?Text;
+    playerFilter : PlayerFilter__442686492;
+    readyParticipants : [UserId__624852056];
+    rosterSettings : ?RosterSettings__919241150;
+    scoringType : ?Text;
+    settings : AuctionSettings__749968699;
+    startingBudget : Nat;
+    state : AuctionState__126333765;
+    teamCount : ?Nat
+  };
+type Room__240238141 =
+  {
+    admin : UserId__617304325;
+    createdAt : Timestamp__253305079;
+    id : RoomId__137466762;
+    isPublic : Bool;
+    leagueFormat : ?Text;
+    name : Text;
+    nominationTurnPausedAt : ?Timestamp__253305079;
+    nominationTurnStartedAt : Timestamp__253305079;
+    nominatorIndex : Nat;
+    paidParticipants : [UserId__617304325];
+    participants : [UserId__617304325];
+    password : ?Text;
+    playerFilter : PlayerFilter__183568986;
+    readyParticipants : [UserId__617304325];
+    rosterSettings : ?RosterSettings__452061571;
+    scoringFormat : ScoringFormat__97295785;
+    season : Nat;
+    settings : AuctionSettings__236326260;
+    startingBudget : Nat;
+    state : AuctionState__868715246;
+    teamCount : ?Nat
+  };
+type Room__272010871 =
+  {
+    admin : UserId__810201388;
+    createdAt : Timestamp__296422864;
+    id : RoomId__338327646;
+    isPublic : Bool;
+    leagueFormat : ?Text;
+    name : Text;
+    nominationTurnPausedAt : ?Timestamp__296422864;
+    nominationTurnStartedAt : Timestamp__296422864;
+    nominatorIndex : Nat;
+    participants : [UserId__810201388];
+    password : ?Text;
+    playerFilter : PlayerFilter__976063364;
+    readyParticipants : [UserId__810201388];
+    rosterSettings : ?RosterSettings__728132443;
+    scoringType : ?Text;
+    settings : AuctionSettings__774097560;
+    startingBudget : Nat;
+    state : AuctionState__755546054;
+    teamCount : ?Nat
+  };
+type Room__7804569 =
+  {
+    admin : UserId__946967140;
+    createdAt : Timestamp__80247937;
+    id : RoomId__1016577012;
+    isPublic : Bool;
+    leagueFormat : ?Text;
+    name : Text;
+    nominationTurnPausedAt : ?Timestamp__80247937;
+    nominationTurnStartedAt : Timestamp__80247937;
+    nominatorIndex : Nat;
+    paidParticipants : [UserId__946967140];
+    participants : [UserId__946967140];
+    password : ?Text;
+    playerFilter : PlayerFilter__509681171;
+    readyParticipants : [UserId__946967140];
+    rosterSettings : ?RosterSettings__794797244;
+    scoringType : ?Text;
+    settings : AuctionSettings__756851356;
+    startingBudget : Nat;
+    state : AuctionState__122295994;
+    teamCount : ?Nat
+  };
+type Room__875365705 =
+  {
+    admin : UserId__248585693;
+    createdAt : Timestamp__866031271;
+    id : RoomId__820301545;
+    isPublic : Bool;
+    leagueFormat : ?Text;
+    name : Text;
+    nominationTurnPausedAt : ?Timestamp__866031271;
+    nominationTurnStartedAt : Timestamp__866031271;
+    nominatorIndex : Nat;
+    participants : [UserId__248585693];
+    password : ?Text;
+    playerFilter : PlayerFilter__89879891;
+    readyParticipants : [UserId__248585693];
+    rosterSettings : ?RosterSettings__192928674;
+    scoringType : ?Text;
+    settings : AuctionSettings__1064154697;
+    startingBudget : Nat;
+    state : AuctionState__542105016;
+    teamCount : ?Nat
+  };
+type Room__895051986 =
+  {
+    admin : UserId__899134035;
+    createdAt : Timestamp__988901252;
+    id : RoomId__1034792333;
+    isPublic : Bool;
+    leagueFormat : ?Text;
+    name : Text;
+    nominationTurnPausedAt : ?Timestamp__988901252;
+    nominationTurnStartedAt : Timestamp__988901252;
+    nominatorIndex : Nat;
+    paidParticipants : [UserId__899134035];
+    participants : [UserId__899134035];
+    password : ?Text;
+    playerFilter : PlayerFilter__1048517866;
+    readyParticipants : [UserId__899134035];
+    rosterSettings : ?RosterSettings__1072869136;
+    scoringFormat : ScoringFormat__974040183;
+    season : Nat;
+    settings : AuctionSettings__633938128;
+    startingBudget : Nat;
+    state : AuctionState__244365821;
+    teamCount : ?Nat
+  };
+type RosterSettings__1021833870 =
+  {
+    bench : Nat;
+    flex : Nat;
+    flexPositions : [Text];
+    qb : Nat;
+    rb : Nat;
+    superflex : Nat;
+    superflexPositions : [Text];
+    te : Nat;
+    wr : Nat
+  };
+type RosterSettings__1072869136 =
+  {
+    bench : Nat;
+    flex : Nat;
+    flexPositions : [Text];
+    qb : Nat;
+    rb : Nat;
+    superflex : Nat;
+    superflexPositions : [Text];
+    te : Nat;
+    wr : Nat
+  };
+type RosterSettings__151063622 =
+  {
+    bench : Nat;
+    flex : Nat;
+    flexPositions : [Text];
+    qb : Nat;
+    rb : Nat;
+    superflex : Nat;
+    superflexPositions : [Text];
+    te : Nat;
+    wr : Nat
+  };
+type RosterSettings__192928674 =
+  {
+    bench : Nat;
+    flex : Nat;
+    flexPositions : [Text];
+    qb : Nat;
+    rb : Nat;
+    superflex : Nat;
+    superflexPositions : [Text];
+    te : Nat;
+    wr : Nat
+  };
+type RosterSettings__452061571 =
+  {
+    bench : Nat;
+    flex : Nat;
+    flexPositions : [Text];
+    qb : Nat;
+    rb : Nat;
+    superflex : Nat;
+    superflexPositions : [Text];
+    te : Nat;
+    wr : Nat
+  };
+type RosterSettings__728132443 =
+  {
+    bench : Nat;
+    flex : Nat;
+    flexPositions : [Text];
+    qb : Nat;
+    rb : Nat;
+    superflex : Nat;
+    superflexPositions : [Text];
+    te : Nat;
+    wr : Nat
+  };
+type RosterSettings__794797244 =
+  {
+    bench : Nat;
+    flex : Nat;
+    flexPositions : [Text];
+    qb : Nat;
+    rb : Nat;
+    superflex : Nat;
+    superflexPositions : [Text];
+    te : Nat;
+    wr : Nat
+  };
+type RosterSettings__822862962 =
+  {
+    bench : Nat;
+    flex : Nat;
+    flexPositions : [Text];
+    qb : Nat;
+    rb : Nat;
+    superflex : Nat;
+    superflexPositions : [Text];
+    te : Nat;
+    wr : Nat
+  };
+type RosterSettings__919241150 =
+  {
+    bench : Nat;
+    flex : Nat;
+    flexPositions : [Text];
+    qb : Nat;
+    rb : Nat;
+    superflex : Nat;
+    superflexPositions : [Text];
+    te : Nat;
+    wr : Nat
+  };
+type ScoringFormat__735281482 =
+  {#custom : CustomScoringSettings__481709642; #halfPpr; #ppr; #std};
+type ScoringFormat__97295785 =
+  {#custom : CustomScoringSettings__112817573; #halfPpr; #ppr; #std};
+type ScoringFormat__974040183 =
+  {#custom : CustomScoringSettings__244368490; #halfPpr; #ppr; #std};
+type ScoringFormat__993904421 =
+  {#custom : CustomScoringSettings__424080601; #halfPpr; #ppr; #std};
+type Set__195681557<T> = Set__29061695<T>;
+type Set__29061695<T> =
+  {var root : Node__1045371124<T>; var size : Nat__58649523};
+type Timestamp__253305079 = Int;
+type Timestamp__296422864 = Int;
+type Timestamp__301639476 = Int;
+type Timestamp__370930425 = Int;
+type Timestamp__443237239 = Int;
+type Timestamp__453886411 = Int;
+type Timestamp__756994130 = Timestamp__301639476;
+type Timestamp__80247937 = Int;
+type Timestamp__866031271 = Int;
+type Timestamp__937470241 = Timestamp__301639476;
+type Timestamp__988901252 = Int;
+type UserId__158757552 = Principal;
+type UserId__248585693 = Principal;
+type UserId__489994765 = Principal;
+type UserId__617304325 = Principal;
+type UserId__624852056 = Principal;
+type UserId__719351118 = UserId__158757552;
+type UserId__810201388 = Principal;
+type UserId__899134035 = Principal;
+type UserId__905231973 = Principal;
+type UserId__946967140 = Principal;
+type UserProfile__151649062 =
+  {avatarUrl : ?Text; displayName : Text; userId : UserId__248585693};
+type UserProfile__193876538 =
+  {avatarUrl : ?Text; displayName : Text; userId : UserId__719351118};
+type UserProfile__254051766 =
+  {avatarUrl : ?Text; displayName : Text; userId : UserId__617304325};
+type UserProfile__51888098 =
+  {avatarUrl : ?Text; displayName : Text; userId : UserId__624852056};
+type UserProfile__651552695 =
+  {avatarUrl : ?Text; displayName : Text; userId : UserId__905231973};
+type UserProfile__674434911 =
+  {avatarUrl : ?Text; displayName : Text; userId : UserId__810201388};
+type UserProfile__935299759 =
+  {avatarUrl : ?Text; displayName : Text; userId : UserId__946967140};
+type UserProfile__955926780 =
+  {avatarUrl : ?Text; displayName : Text; userId : UserId__489994765};
+type UserProfile__965880994 =
+  {avatarUrl : ?Text; displayName : Text; userId : UserId__899134035};
+type WeeklyPlayerStats__1061898723 =
+  {
+    fumblesLost : Nat;
+    ints : Nat;
+    passTds : Nat;
+    passYds : Nat;
+    playerId : Text;
+    recTds : Nat;
+    recYds : Nat;
+    receptions : Nat;
+    rushTds : Nat;
+    rushYds : Nat;
+    season : Nat;
+    twoPtConversions : Nat;
+    week : Nat
+  };
+type WeeklyPlayerStats__56753367 =
+  {
+    fumblesLost : Nat;
+    ints : Nat;
+    passTds : Nat;
+    passYds : Int;
+    playerId : Text;
+    recTds : Nat;
+    recYds : Int;
+    receptions : Nat;
+    rushTds : Nat;
+    rushYds : Int;
+    season : Nat;
+    twoPtConversions : Nat;
+    week : Nat
+  };
+type WonPlayer__1046240868 =
+  {
+    byeWeek : ?Nat;
+    closedAt : Timestamp__453886411;
+    nominatedBy : UserId__489994765;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    team : Text;
+    winningBid : Nat
+  };
+type WonPlayer__135894923 =
+  {
+    closedAt : Timestamp__866031271;
+    nominatedBy : UserId__248585693;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    team : Text;
+    winningBid : Nat
+  };
+type WonPlayer__202134953 =
+  {
+    byeWeek : ?Nat;
+    closedAt : Timestamp__253305079;
+    nominatedBy : UserId__617304325;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    team : Text;
+    winningBid : Nat
+  };
+type WonPlayer__277343058 =
+  {
+    byeWeek : ?Nat;
+    closedAt : Timestamp__937470241;
+    nominatedBy : UserId__719351118;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    team : Text;
+    winningBid : Nat
+  };
+type WonPlayer__79523215 =
+  {
+    byeWeek : ?Nat;
+    closedAt : Timestamp__80247937;
+    nominatedBy : UserId__946967140;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    team : Text;
+    winningBid : Nat
+  };
+type WonPlayer__863520342 =
+  {
+    closedAt : Timestamp__296422864;
+    nominatedBy : UserId__810201388;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    team : Text;
+    winningBid : Nat
+  };
+type WonPlayer__908768236 =
+  {
+    byeWeek : ?Nat;
+    closedAt : Timestamp__988901252;
+    nominatedBy : UserId__899134035;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    team : Text;
+    winningBid : Nat
+  };
+type WonPlayer__968383225 =
+  {
+    byeWeek : ?Nat;
+    closedAt : Timestamp__443237239;
+    nominatedBy : UserId__624852056;
+    playerId : Text;
+    playerName : Text;
+    position : Text;
+    team : Text;
+    winningBid : Nat
+  };
+{
+  "20260807_000000" : (old : OldActor__812199013) -> NewActor__567342121;
+  "20260808_142843" : (old : OldActor__720724081) -> NewActor__757157654;
+  "20260809_000000" : (old : OldActor__220611212) -> NewActor__861681917;
+  "20260821_000000" : (old : OldActor__147103740) -> NewActor__418213216;
+  "20260821_164823" : (old : OldActor__684614728) -> NewActor__420660799;
+  "20260822_000000" : (old : OldActor__910994591) -> NewActor__40607548;
+  "20260822_weekly_stats" : (old : OldActor__214185805) -> NewActor__58855420;
+  "20260823_000000" : (old : OldActor__837661173) -> NewActor__783349852
+}
+actor  {
+  stable activeAdpDataset :
+    {
+      var root : Node__430031793<Text, ADPDataset__856740658>;
+      var size : Nat__58649523
+    };
+  stable activeRoomIds :
+    {var root : Node__1045371124<RoomId__30709683>; var size : Nat__58649523};
+  stable adminPrincipalStore :
+    {
+      var root : Node__430031793<Text, UserId__719351118>;
+      var size : Nat__58649523
+    };
+  stable bestBallConfigs :
+    {
+      var root : Node__430031793<RoomId__30709683, BestBallConfig__1004604901>;
+      var size : Nat__58649523
+    };
+  stable bids :
+    {
+      var root :
+        Node__430031793<RoomId__30709683,
+                         Map__386906547<NominationId__461430578,
+                                         List__89170296<Bid__613633421>>>;
+      var size : Nat__58649523
+    };
+  stable byeWeeksStore :
+    {
+      var root : Node__430031793<Text, [(Text, Nat)]>;
+      var size : Nat__58649523
+    };
+  stable draftedPlayerIds :
+    {
+      var root : Node__430031793<RoomId__30709683, Set__195681557<Text>>;
+      var size : Nat__58649523
+    };
+  stable giphyApiKeyStore :
+    {var root : Node__430031793<Text, Text>; var size : Nat__58649523};
+  stable lastNotificationWorkerCompletedAt : {var value : Int};
+  stable lastNotificationWorkerError : {var error : ?Text};
+  stable lastNotificationWorkerStartedAt : {var value : Int};
+  stable lastRssFetchStatus : {var status : [(Text, Bool)]};
+  stable nextMsgIdState : {var next : Nat};
+  stable nextNominationIdState : {var next : Nat};
+  stable nextNotificationId : {var next : Nat};
+  stable nominatedByRoom :
+    {
+      var root : Node__430031793<RoomId__30709683, Set__195681557<Text>>;
+      var size : Nat__58649523
+    };
+  stable nominationHistory :
+    {
+      var root :
+        Node__430031793<RoomId__30709683,
+                         Map__386906547<NominationId__461430578,
+                                         List__89170296<BidHistoryEvent__920926881>>>;
+      var size : Nat__58649523
+    };
+  stable nominationQueue :
+    {var root : Node__430031793<Text, Text>; var size : Nat__58649523};
+  stable nominations :
+    {
+      var root :
+        Node__430031793<NominationId__461430578, Nomination__582568800>;
+      var size : Nat__58649523
+    };
+  stable nominationsByRoom :
+    {
+      var root : Node__430031793<RoomId__30709683, [NominationId__461430578]>;
+      var size : Nat__58649523
+    };
+  stable notificationQueue :
+    {
+      var blockIndex : Nat__58649523;
+      var blocks : [var [var ?PendingNotification__89232765]];
+      var elementIndex : Nat__58649523
+    };
+  stable notificationWorkerEntryCount : {var count : Nat};
+  stable notificationsExpiredTotal : {var count : Nat};
+  stable notificationsFailedTotal : {var count : Nat};
+  stable notificationsProcessedTotal : {var count : Nat};
+  stable notificationsQueuedTotal : {var count : Nat};
+  stable notificationsRetriedTotal : {var count : Nat};
+  stable notificationsSentTotal : {var count : Nat};
+  stable oneSignalApiKeyStore :
+    {var root : Node__430031793<Text, Text>; var size : Nat__58649523};
+  stable oneSignalPlayerIds :
+    {var root : Node__430031793<Text, Text>; var size : Nat__58649523};
+  stable participants :
+    {
+      var root :
+        Node__430031793<RoomId__30709683,
+                         Map__386906547<UserId__719351118,
+                                         Participant__845119468>>;
+      var size : Nat__58649523
+    };
+  stable playerPriceHistory :
+    {
+      var root :
+        Node__430031793<Text, List__89170296<PlayerPriceRecord__620937694>>;
+      var size : Nat__58649523
+    };
+  stable players :
+    {
+      var root : Node__430031793<Text, Player__274770166>;
+      var size : Nat__58649523
+    };
+  stable processingNotifications : {var value : Bool};
+  stable profiles :
+    {
+      var root : Node__430031793<UserId__719351118, UserProfile__193876538>;
+      var size : Nat__58649523
+    };
+  stable proxyBids :
+    {
+      var root :
+        Node__430031793<RoomId__30709683,
+                         Map__386906547<NominationId__461430578,
+                                         Map__386906547<UserId__719351118,
+                                                         ProxyBid__602740948>>>;
+      var size : Nat__58649523
+    };
+  stable recoveryAttempts :
+    {
+      var root : Node__430031793<Text, RecoveryAttempt__599169423>;
+      var size : Nat__58649523
+    };
+  stable recoveryPasswordHash : {var value : ?Text};
+  stable roomIdState : {var next : Nat};
+  stable roomMessages :
+    {
+      var root :
+        Node__430031793<RoomId__30709683,
+                         List__89170296<ChatMessage__967894394>>;
+      var size : Nat__58649523
+    };
+  stable rooms :
+    {
+      var root : Node__430031793<RoomId__30709683, Room__1035395216>;
+      var size : Nat__58649523
+    };
+  stable rssCacheContent : {var content : ?Text};
+  stable rssCacheTimestamp : {var timestamp : Nat};
+  stable rssFeedUrlsStore :
+    {var root : Node__430031793<Text, [Text]>; var size : Nat__58649523};
+  stable rssRefreshIntervalSecs : {var seconds : Nat};
+  stable userRooms :
+    {
+      var root :
+        Node__430031793<UserId__719351118, List__89170296<RoomId__30709683>>;
+      var size : Nat__58649523
+    };
+  stable weeklyPlayerStats :
+    {
+      var root : Node__430031793<Text, WeeklyPlayerStats__56753367>;
+      var size : Nat__58649523
+    }
+};

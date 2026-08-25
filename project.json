@@ -1,0 +1,15 @@
+{
+  "overview": "A fantasy football auction house where users manage rooms, sync weekly player stats, and compute fantasy points from raw stats.",
+  "features": [
+    "Sync weekly NFL player stats",
+    "Compute fantasy points from raw stats for any scoring format",
+    "Query a player's weekly fantasy points"
+  ],
+  "category": "fantasy-sports",
+  "tags": [
+    "fantasy-football",
+    "auction",
+    "scoring"
+  ],
+  "last_updated": "2026-08-22T03:03:23.247Z"
+}

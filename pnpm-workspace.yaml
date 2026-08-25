@@ -1,0 +1,8 @@
+packages:
+  - src/**/*
+onlyBuiltDependencies:
+  - '@biomejs/biome'
+  - esbuild
+  - sharp
+ignoredBuiltDependencies:
+  - '@dfinity/pic'
