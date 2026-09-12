@@ -401,6 +401,7 @@ export default function DraftBoardTab({
             <WonPlayersList
               wonPlayers={currentParticipant?.wonPlayers ?? []}
               showAll={false}
+              showNews={false}
             />
           )}
         </div>

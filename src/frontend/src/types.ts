@@ -18,12 +18,27 @@ export type {
   PrivateParticipantBudget,
   PublicParticipantBudget,
   WeeklyPlayerStats,
+  SyncStatus,
+  SyncStatusRecord,
+  H2HStandingEntry,
+  ResolvedContestant,
+  BracketSlot,
+  BracketSlotState,
+  PlayoffGame,
+  PlayoffGameResult,
+  GameStatus,
+  PlayoffBracketResult,
 } from "./backend";
 
 import type { RosterSettings } from "./backend";
 export type { RosterSettings };
 
-export { AuctionState, NominationState } from "./backend";
+export {
+  AuctionState,
+  GameType,
+  NominationState,
+  CompetitionMode,
+} from "./backend";
 
 // UI-only types
 
@@ -173,4 +188,35 @@ export interface ProfileModalState {
   isOpen: boolean;
   open: () => void;
   close: () => void;
+}
+
+// ── Head-to-Head (H2H) UI types ─────────────────────────────────────────────
+// These are UI-only display types consumed by the H2H views (MyBestBallTeamTab
+// and StandingsTab). They are derived from backend data, never stored.
+
+/** Outcome of a single weekly head-to-head matchup for one team. */
+export type MatchupResult = "win" | "loss" | "tie";
+
+/** A single weekly head-to-head matchup as displayed in the team tab. */
+export interface H2HMatchup {
+  week: number;
+  opponentName: string;
+  /** This team's score for the week. */
+  teamScore: number;
+  /** Opponent's score for the week. */
+  opponentScore: number;
+  result: MatchupResult;
+}
+
+/** Season W-L-T record for a team. */
+export interface H2HRecord {
+  wins: number;
+  losses: number;
+  ties: number;
+}
+
+/** A team's season points-for total. */
+export interface H2HPointsFor {
+  pointsFor: number;
+  gamesPlayed: number;
 }

@@ -48,6 +48,11 @@
     --sidebar-accent-foreground: 0.95 0.01 315;
     --sidebar-border: 0.28 0.012 260;
     --sidebar-ring: 0.72 0.22 190;
+
+    --success: 0.68 0.24 110;
+    --success-foreground: 0.13 0.01 110;
+    --warning: 0.75 0.15 85;
+    --warning-foreground: 0.13 0.01 85;
   }
 
   .dark {
@@ -90,6 +95,11 @@
     --sidebar-accent-foreground: 0.95 0.01 315;
     --sidebar-border: 0.26 0.012 260;
     --sidebar-ring: 0.72 0.22 190;
+
+    --success: 0.68 0.24 110;
+    --success-foreground: 0.13 0.01 110;
+    --warning: 0.75 0.15 85;
+    --warning-foreground: 0.13 0.01 85;
   }
 
   * {
@@ -252,6 +262,9 @@
   .pos-te {
     @apply bg-orange-500/20 text-orange-400 border-orange-500/30;
   }
+  .pos-flex {
+    @apply bg-cyan-500/20 text-cyan-400 border-cyan-500/30;
+  }
 
   /* ── Fade-in entrance animation ──────────────────────────────────────── */
   .animate-fade-in {
@@ -287,6 +300,239 @@
   .glow-urgency-high {
     box-shadow: 0 0 20px rgba(34, 211, 238, 0.22), 0 0 40px
       rgba(34, 211, 238, 0.11);
+  }
+
+  /* ── Best Ball Team dashboard ──────────────────────────────────── */
+  .slot-card {
+    @apply bg-card border border-border rounded-lg p-3 flex items-center justify-between gap-3 transition-smooth;
+  }
+  .slot-card.filled {
+    @apply hover:border-primary/40 hover:glow-urgency-low;
+  }
+  .slot-card.empty {
+    @apply border-dashed border-muted bg-muted/20;
+  }
+  .slot-position {
+    @apply font-mono text-xs font-bold tracking-widest uppercase px-2 py-1 rounded-sm border;
+  }
+  .slot-player {
+    @apply font-display font-semibold text-foreground truncate;
+  }
+  .slot-points {
+    @apply font-mono text-base font-bold text-primary;
+  }
+  .slot-empty-label {
+    @apply text-sm text-muted-foreground italic;
+  }
+  .bench-row {
+    @apply flex items-center justify-between gap-3 px-3 py-2 rounded-md bg-muted/20 border border-border;
+  }
+  .bench-name {
+    @apply font-body text-sm text-foreground truncate;
+  }
+  .bench-points {
+    @apply font-mono text-sm font-semibold text-muted-foreground;
+  }
+  .total-banner {
+    @apply flex items-center justify-between px-5 py-4 rounded-xl border border-primary/30 bg-primary/5;
+  }
+  .total-label {
+    @apply font-mono text-xs font-bold tracking-widest uppercase text-muted-foreground;
+  }
+  .total-value {
+    @apply font-mono text-3xl font-bold text-primary;
+  }
+  .rank-badge {
+    @apply inline-flex items-center gap-1 font-mono text-xs font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border;
+  }
+  .rank-badge.top {
+    @apply bg-secondary/15 text-secondary border-secondary/30;
+  }
+  .snapshot-card {
+    @apply bg-card border border-border rounded-xl p-5;
+  }
+  .snapshot-label {
+    @apply font-mono text-xs font-bold tracking-widest uppercase text-muted-foreground;
+  }
+  .snapshot-stat {
+    @apply font-mono text-2xl font-bold text-foreground;
+  }
+  .week-nav-button {
+    @apply inline-flex items-center justify-center h-9 w-9 rounded-md border border-border bg-muted/20 text-foreground transition-smooth
+    hover:border-primary/40 hover:glow-urgency-low
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+    disabled:opacity-40 disabled:pointer-events-none;
+  }
+  .unsynced-card {
+    @apply rounded-xl border border-dashed border-muted bg-muted/20 px-5 py-8 text-center space-y-2;
+  }
+
+  /* ── Head-to-Head regular season ─────────────────────────────── */
+  .standings-table {
+    @apply w-full text-sm border-collapse;
+  }
+  .standings-table thead th {
+    @apply font-mono text-[11px] font-bold tracking-widest uppercase text-muted-foreground
+      text-left px-3 py-2.5 border-b border-border bg-muted/20;
+  }
+  .standings-table thead th.numeric {
+    @apply text-right;
+  }
+  .standings-table tbody td {
+    @apply px-3 py-2.5 border-b border-border/60 text-foreground align-middle;
+  }
+  .standings-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .standings-table tbody tr:hover td {
+    @apply bg-muted/10;
+  }
+  .standings-table td.numeric {
+    @apply text-right font-mono;
+  }
+  .standings-rank {
+    @apply inline-flex items-center justify-center h-7 w-7 rounded-full border font-mono text-xs font-bold;
+  }
+  .standings-rank.top {
+    @apply bg-secondary/15 text-secondary border-secondary/30;
+  }
+  .standings-team {
+    @apply font-display font-semibold text-foreground;
+  }
+  .wl-record {
+    @apply font-mono tabular-nums;
+  }
+  .wl-record.win {
+    @apply text-secondary;
+  }
+  .wl-record.loss {
+    @apply text-destructive/80;
+  }
+  .wl-record.tie {
+    @apply text-muted-foreground;
+  }
+  .pf-value {
+    @apply font-mono font-semibold text-primary;
+  }
+  .matchup-card {
+    @apply bg-card border border-border rounded-xl p-5 transition-smooth hover:border-primary/40;
+  }
+  .matchup-team {
+    @apply flex items-center justify-between gap-3 py-2;
+  }
+  .matchup-team-name {
+    @apply font-display font-semibold text-foreground truncate;
+  }
+  .matchup-team-score {
+    @apply font-mono text-xl font-bold;
+  }
+  .matchup-team-score.win {
+    @apply text-secondary;
+  }
+  .matchup-team-score.loss {
+    @apply text-muted-foreground;
+  }
+  .matchup-team-score.tie {
+    @apply text-muted-foreground;
+  }
+  .matchup-result-badge {
+    @apply inline-flex items-center font-mono text-[11px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-sm border;
+  }
+  .matchup-result-badge.win {
+    @apply bg-secondary/15 text-secondary border-secondary/30;
+  }
+  .matchup-result-badge.loss {
+    @apply bg-destructive/10 text-destructive/90 border-destructive/30;
+  }
+  .matchup-result-badge.tie {
+    @apply bg-muted/20 text-muted-foreground border-border;
+  }
+  .h2h-section-label {
+    @apply font-mono text-xs font-bold tracking-widest uppercase text-muted-foreground;
+  }
+
+  /* ── Playoff Bracket ─────────────────────────────────── */
+  .bracket-grid {
+    @apply grid gap-6 md:gap-8 items-start;
+  }
+  .bracket-round {
+    @apply flex flex-col gap-4;
+  }
+  .bracket-round-label {
+    @apply font-mono text-[11px] font-bold tracking-widest uppercase text-muted-foreground text-center pb-2;
+  }
+  .bracket-matchup {
+    @apply bg-card border border-border rounded-lg shadow-matchup transition-smooth;
+  }
+  .bracket-matchup.resolved {
+    @apply border-border;
+  }
+  .bracket-matchup.pending-sync {
+    @apply border-dashed border-primary/40 bg-muted/20;
+  }
+  .bracket-matchup.pending-dep {
+    @apply border-dashed border-muted bg-muted/10;
+  }
+  .bracket-seed {
+    @apply inline-flex items-center justify-center h-6 w-6 rounded-full border font-mono text-[11px] font-bold shrink-0;
+  }
+  .bracket-seed.filled {
+    @apply border-primary/40 text-primary bg-primary/10;
+  }
+  .bracket-seed.tbd {
+    @apply border-muted text-muted-foreground bg-muted/10;
+  }
+  .bracket-team-row {
+    @apply flex items-center justify-between gap-3 px-3 py-2;
+  }
+  .bracket-team-row + .bracket-team-row {
+    @apply border-t border-border/60;
+  }
+  .bracket-team-name {
+    @apply font-display font-semibold text-foreground truncate;
+  }
+  .bracket-team-name.tbd {
+    @apply text-muted-foreground italic;
+  }
+  .bracket-team-score {
+    @apply font-mono text-lg font-bold tabular-nums;
+  }
+  .bracket-team-score.win {
+    @apply text-secondary;
+  }
+  .bracket-team-score.loss {
+    @apply text-muted-foreground;
+  }
+  .bracket-team-score.pending {
+    @apply text-muted-foreground;
+  }
+  .bracket-pending-badge {
+    @apply inline-flex items-center font-mono text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-sm border;
+  }
+  .bracket-pending-badge.sync {
+    @apply bg-primary/10 text-primary border-primary/30 animate-pulse-slow;
+  }
+  .bracket-pending-badge.dep {
+    @apply bg-muted/20 text-muted-foreground border-border;
+  }
+  .bracket-champion {
+    @apply bg-card border-2 border-warning/60 rounded-xl shadow-elevated glow-gold;
+  }
+  .bracket-champion-card {
+    @apply flex flex-col items-center gap-2 px-6 py-8 text-center;
+  }
+  .bracket-champion-crown {
+    @apply font-mono text-xs font-bold tracking-widest uppercase text-warning;
+  }
+  .bracket-champion-name {
+    @apply font-display text-2xl font-bold text-foreground;
+  }
+  .bracket-champion-score {
+    @apply font-mono text-xl font-bold text-warning;
+  }
+  .glow-gold {
+    box-shadow: 0 0 18px oklch(0.75 0.15 85 / 0.35), 0 0 40px
+      oklch(0.75 0.15 85 / 0.15);
   }
 }
 

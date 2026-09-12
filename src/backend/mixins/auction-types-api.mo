@@ -13,9 +13,12 @@ import Char "mo:core/Char";
 import Debug "mo:core/Debug";
 import Nat "mo:core/Nat";
 import Error "mo:core/Error";
+import Runtime "mo:core/Runtime";
 import OutCall "mo:caffeineai-http-outcalls/outcall";
 import AdminAuthLib "../lib/admin-auth";
-import Result "mo:core/Result";
+import SyncStatusLib "../lib/sync-status";
+import SyncStatusTypes "../types/sync-status";
+import H2HLib "../lib/h2h";
 // Buffer replaced with List — mo:core 2.5.0 does not include Buffer
 
 // Public API mixin for the Fantasy Football Auction platform.
@@ -74,6 +77,8 @@ mixin (
   processingNotifications : { var value : Bool },
   bestBallConfigs : Map.Map<Types.RoomId, Types.BestBallConfig>,
   weeklyPlayerStats : Map.Map<Text, Types.WeeklyPlayerStats>,
+  syncStatuses : Map.Map<Text, SyncStatusTypes.SyncStatusRecord>,
+  finalizePriorPartialWeeks : (Nat, Nat) -> Nat,
 ) {
 
   // ── Notification worker tuning constants ─────────────────────────────────────
@@ -102,10 +107,90 @@ mixin (
     playerId # "|" # season.toText() # "|" # week.toText();
   };
 
-  /// Admin-only endpoint that receives a typed batch of raw weekly player stats
-  /// and upserts them into weeklyPlayerStats. The backend does NOT fetch or
-  /// parse anything itself — the frontend fetches from Sleeper and sends the
-  /// typed batch here.
+  /// Conservative per-entry validation for a weekly stats entry (Phase 5C).
+  /// Returns true when the entry is structurally sound and every stat is within
+  /// a generous bound derived from real NFL single-game records. A false return
+  /// means the entry is obviously impossible or malformed and must be skipped,
+  /// not stored. This is deliberately NOT a provenance check (the backend cannot
+  /// verify the data came from Sleeper) and deliberately does NOT second-guess
+  /// statistically unusual but legitimate performances — every bound sits
+  /// meaningfully above the all-time single-game record for its category.
+  ///
+  /// Bounds and their real-record justification:
+  ///   - passYds  <= 1000 (record 554, Norm Van Brocklin 1951)
+  ///   - rushYds  <= 500  (record 296, Adrian Peterson 2007)
+  ///   - recYds   <= 500  (record 336, Flipper Anderson 1989)
+  ///   - receptions <= 40 (record 21, Brandon Marshall 2009)
+  ///   - passTds  <= 15   (record 7, eight QBs)
+  ///   - rushTds  <= 10   (record 6, e.g. Ernie Nevers / Gale Sayers)
+  ///   - recTds   <= 10   (record 5, e.g. Jerry Rice / Kellen Winslow)
+  ///   - ints     <= 15   (record 8, Jim Hardy 1950)
+  ///   - fumblesLost <= 15 (record 7, e.g. Adrian Peterson 2013)
+  ///   - twoPtConversions <= 10 (record 3)
+  ///   - week in 1..18 (NFL regular season, 17 games + bye)
+  ///   - season in 2000..2100 (sane 4-digit year)
+  ///   - playerId non-empty and numeric (Sleeper player IDs are numeric strings)
+  ///   - no yardage below -50 (passYds/rushYds/recYds are Int; small negative
+  ///     totals like -8 are legitimate, only obviously corrupt values below the
+  ///     generous -50 floor are rejected)
+  ///
+  /// Legitimate zero values pass unchanged — a player who didn't score stores as
+  /// 0, never flagged.
+  func isValidStatsEntry(entry : Types.WeeklyPlayerStats) : Bool {
+    // Structurally valid identifiers.
+    if (entry.playerId.size() == 0) return false;
+    var numeric = true;
+    for (ch in entry.playerId.chars()) {
+      if (not ch.isDigit()) { numeric := false };
+    };
+    if (not numeric) return false;
+    // Week must be a real NFL week (1-18).
+    if (entry.week < 1 or entry.week > 18) return false;
+    // Season must be a sane 4-digit year.
+    if (entry.season < 2000 or entry.season > 2100) return false;
+    // Negative yardage floor: passYds/rushYds/recYds are Int because small
+    // negative totals are legitimate real-world NFL data (e.g. a -8 rush or a
+    // -1 pass). Only obviously malformed/corrupted values below the generous
+    // -50 floor are rejected — this catches -9999-style corruption, not typical
+    // statistical distributions.
+    if (entry.passYds < -50 or entry.rushYds < -50 or entry.recYds < -50) return false;
+    // Yardage upper bounds (records: pass 554, rush 296, rec 336).
+    if (entry.passYds > 1000 or entry.rushYds > 500 or entry.recYds > 500) return false;
+    // Count upper bounds (records: passTds 7, ints 8, rushTds 6, rec 21, recTds 5, fumbles 7, 2pt 3).
+    if (entry.passTds > 15) return false;
+    if (entry.ints > 15) return false;
+    if (entry.rushTds > 10) return false;
+    if (entry.receptions > 40) return false;
+    if (entry.recTds > 10) return false;
+    if (entry.fumblesLost > 15) return false;
+    if (entry.twoPtConversions > 10) return false;
+    true;
+  };
+
+  /// Server-side write-coordination cooldown for live/partial weeks. If a
+  /// (season, week) was successfully synced within this window, a subsequent
+  /// syncWeeklyStats call returns a harmless no-op success (#ok 0) instead of
+  /// performing another write. This is write-coordination ONLY — it does not
+  /// and is not intended to prevent multiple participants' browsers from
+  /// independently fetching from Sleeper at nearly the same time (accepted
+  /// low-cost client redundancy). Chosen as 75 seconds: comfortably inside the
+  /// required 60-90s range, long enough to absorb near-simultaneous duplicate
+  /// writes from several participants' browsers, yet short enough that a
+  /// legitimate later sync (Thursday → Sunday → Monday) is never suppressed.
+  transient let SYNC_COOLDOWN_NANOS : Nat = 75_000_000_000;
+
+  /// Endpoint that receives a typed batch of raw weekly player stats and
+  /// upserts them into weeklyPlayerStats. The backend does NOT fetch or parse
+  /// anything itself — the frontend fetches from Sleeper and sends the typed
+  /// batch here.
+  ///
+  /// Authorization:
+  ///   - the global admin is authorized unconditionally (unchanged), OR
+  ///   - a participant of the room identified by `roomId`, provided
+  ///     `room.season == season` (the season param must match the room's
+  ///     actual season).
+  /// If `roomId` does not resolve to a real room, or the caller is not a
+  /// participant of it, the call is rejected with a clear #err.
   ///
   /// For each entry in the batch:
   ///   - verifies entry.season == season and entry.week == week; mismatched
@@ -115,14 +200,65 @@ mixin (
   ///
   /// Returns #ok with the count of entries successfully stored.
   public shared ({ caller }) func syncWeeklyStats(
+    roomId : Types.RoomId,
     season : Nat,
     week : Nat,
     batch : [Types.WeeklyPlayerStats],
   ) : async { #ok : Nat; #err : Text } {
-    // Only the registered admin (or hardcoded admin principal) may call this.
-    // Same authorization pattern as importPlayers.
+    // Authorization: the global admin is authorized unconditionally (unchanged).
+    // Otherwise the caller must be a participant of the room AND the season
+    // param must match the room's actual season. If roomId does not resolve to
+    // a real room, or the caller is not a participant of it, reject with a
+    // clear #err.
     if (not AdminAuthLib.isGlobalAdmin(adminPrincipalStore, caller)) {
-      return #err "Only the admin can sync weekly stats";
+      switch (rooms.get(roomId)) {
+        case null {
+          return #err "Room not found";
+        };
+        case (?room) {
+          if (room.season != season) {
+            return #err ("Season mismatch: room " # roomId # " is in season " # room.season.toText());
+          };
+          let isParticipant = room.participants.find(func p = Principal.equal(p, caller)) != null;
+          if (not isParticipant) {
+            return #err "Not a participant in this room";
+          };
+        };
+      };
+    };
+
+    // Finalization guard: a (season, week) that is already #finalized is
+    // terminal and cannot be resynced. This check runs after the
+    // authorization check and before any state is written, so a finalized
+    // week is never reprocessed or overwritten through this path — for
+    // participants and admins alike. A not-yet-finalized week
+    // (#notYetAttempted/#partial) is unaffected and remains retry-eligible
+    // exactly as before.
+    if (SyncStatusLib.isWeekFinalized(syncStatuses, season, week)) {
+      return #err ("Week " # week.toText() # " of " # season.toText() # " is finalized and cannot be resynced");
+    };
+
+    // Server-side write-coordination cooldown for live/partial weeks: if this
+    // (season, week) was successfully synced within SYNC_COOLDOWN_NANOS, return
+    // a harmless no-op success (#ok 0) instead of performing another write.
+    // This is write-coordination only — it does not prevent multiple
+    // participants' browsers from independently fetching from Sleeper at
+    // nearly the same time (accepted low-cost client redundancy). A no-op
+    // feels like "already up to date", not a failure. The timestamp reused is
+    // SyncStatusRecord.lastSuccessfulAt (when the week was last marked
+    // #partial by a successful sync), so no new stable field is introduced.
+    switch (SyncStatusLib.getSyncStatus(syncStatuses, season, week)) {
+      case (?rec) {
+        switch (rec.lastSuccessfulAt) {
+          case (?ts) {
+            if (Time.now() - ts < SYNC_COOLDOWN_NANOS) {
+              return #ok 0;
+            };
+          };
+          case null {};
+        };
+      };
+      case null {};
     };
 
     var stored = 0;
@@ -131,6 +267,13 @@ mixin (
       // Skip entries whose season/week don't match the requested sync target.
       // A mismatched entry is counted in the diagnostic, not a whole-call error.
       if (entry.season != season or entry.week != week) {
+        skipped += 1;
+      } else if (not isValidStatsEntry(entry)) {
+        // Per-entry conservative validation (Phase 5C): an obviously impossible
+        // or malformed entry (negative yardage, out-of-range counts, non-numeric
+        // playerId, out-of-range week/season) is skipped on its own — it must
+        // never block the other legitimate entries in the same batch. Counted in
+        // the same `skipped` diagnostic as season/week mismatches.
         skipped += 1;
       } else {
         // Upsert keyed by the composite key — re-syncing an already-synced week
@@ -146,6 +289,26 @@ mixin (
       # " stored=" # stored.toText()
       # " skipped=" # skipped.toText()
     );
+
+    // Record the sync status for this (season, week) via the adjacent
+    // recordSyncStatus path. The week is recorded as #partial — the mutable,
+    // non-terminal active/partial state that accepts repeated syncWeeklyStats
+    // calls without locking. `stored == 0` mid-progress does NOT imply "nothing
+    // happened": a partial sync where most owned players legitimately haven't
+    // played yet stays #partial (retry-eligible, non-terminal), never locked or
+    // misrepresented. A week only becomes terminal via the finalization
+    // operation, never via a sync call. The atomic guard inside
+    // recordSyncStatus prevents an already-#finalized week from being replaced
+    // or downgraded by a later submission.
+    ignore SyncStatusLib.recordSyncStatus(syncStatuses, season, week, #partial, null, ?Time.now());
+
+    // Automatic finalization trigger: the moment a new week is synced, every
+    // earlier #partial week in the same season is finalized. This is the
+    // synchronization-flow signal that enforces the hard reliability invariant —
+    // at most one non-finalized (live) week per season, so multiple
+    // completed-but-unfinalized weeks can never accumulate.
+    ignore finalizePriorPartialWeeks(season, week);
+
     #ok stored;
   };
 
@@ -181,6 +344,27 @@ mixin (
   /// Check if caller is admin of the given room
   func isAdmin(room : Types.Room, caller : Types.UserId) : Bool {
     Principal.equal(room.admin, caller);
+  };
+
+  /// Roster-lock invariant (Phase 5): wonPlayers must never be mutated when the
+  /// room is #Completed. Called from finalizeNomination immediately before the
+  /// applyWin award path so it does not interfere with, duplicate, or conflict
+  /// with applyWin's existing auction-state validation. Because finalizeNomination
+  /// only runs during a live auction (room.state == #Active), this guard never
+  /// fires in normal operation — it is a defensive invariant that makes the
+  /// (currently-impossible) post-completion roster mutation explicit.
+  func assertRosterLocked(room : Types.Room) {
+    // Roster-lock invariant: wonPlayers must never be mutated when the room is
+    // #Completed. Called from finalizeNomination immediately before the applyWin
+    // award path. Because finalizeNomination only runs during a live auction
+    // (room.state == #Active), this guard never fires in normal operation — it
+    // is a defensive invariant that makes the (currently-impossible)
+    // post-completion roster mutation explicitly impossible. A trap here means a
+    // code path tried to award a player after the auction completed, which must
+    // never happen.
+    if (room.state == #Completed) {
+      Runtime.trap("Roster is locked: cannot mutate wonPlayers after the room is completed");
+    };
   };
 
   /// Get participant map for a room (creates empty if missing)
@@ -786,6 +970,14 @@ mixin (
                       };
                     };
                     // Apply win: spent += currentBid exactly once, committed cleared, wonPlayers updated
+                    // Roster-lock invariant: wonPlayers must not be mutated when the room is
+                    // #Completed. This never fires during a live auction (finalizeNomination
+                    // only runs while room.state == #Active); it makes the post-completion
+                    // roster mutation explicitly impossible.
+                    switch (rooms.get(nom.roomId)) {
+                      case (?lockRoom) assertRosterLocked(lockRoom);
+                      case null {};
+                    };
                     let updated = AuctionLib.applyWin(p, player, nom.currentBid, nomId, nom.nominatedBy, now);
                     pm.add(fw, updated);
                     // Append nominationEnded event to bid history
@@ -1638,6 +1830,9 @@ mixin (
   // ─────────────────────────────────────────────────────────────────────────
 
   public shared ({ caller }) func createRoom(
+    gameType : Types.GameType,
+    competitionMode : Types.CompetitionMode,
+    playoffTeams : Nat,
     name : Text,
     startingBudget : Nat,
     settings : Types.AuctionSettings,
@@ -1651,6 +1846,48 @@ mixin (
     season : Nat,
     scoringFormat : Types.ScoringFormat,
   ) : async { #ok : Types.RoomId; #err : Text } {
+    // #Guillotine is reserved in the GameType but has no lifecycle support in
+    // this build — reject it explicitly rather than silently accepting a room
+    // that cannot be played.
+    switch (gameType) {
+      case (#Guillotine) return #err "Guillotine is not yet implemented";
+      case _ {};
+    };
+    // Phase 12a — enforce the four valid competition configuration families
+    // together at creation. competitionMode/playoffTeams are set once here and
+    // immutable forever after.
+    //   1. Auction — competitionMode/playoffTeams irrelevant (accepted & ignored).
+    //   2. Best Ball / Cumulative — playoffTeams must be 0.
+    //   3. Best Ball / Head-to-Head without playoffs — playoffTeams must be 0.
+    //   4. Best Ball / Head-to-Head with playoffs — playoffTeams exactly 4, 6, or 8.
+    // Any other combination is rejected with a clear #err.
+    switch (gameType) {
+      case (#Auction) {
+        // Family 1: accept-and-ignore competitionMode/playoffTeams for Auction
+        // rooms (consistent with the spec's chosen behavior).
+      };
+      case (#BestBall) {
+        switch (competitionMode) {
+          case (#Cumulative) {
+            if (playoffTeams != 0) {
+              return #err "Cumulative Best Ball rooms cannot have playoffs (playoffTeams must be 0)";
+            };
+          };
+          case (#HeadToHead) {
+            if (playoffTeams == 0) {
+              // Family 3: H2H without playoffs — valid.
+            } else if (playoffTeams == 4 or playoffTeams == 6 or playoffTeams == 8) {
+              // Family 4: H2H with playoffs — valid.
+            } else {
+              return #err "Head-to-Head playoff teams must be 0, 4, 6, or 8";
+            };
+          };
+        };
+      };
+      case (#Guillotine) {
+        // Already rejected above; unreachable.
+      };
+    };
     if (name.size() == 0) return #err "Room name cannot be empty";
     if (startingBudget == 0) return #err "Starting budget must be greater than 0";
 
@@ -1684,7 +1921,7 @@ mixin (
       case _ "all";
     };
     let settingsWithCap : Types.AuctionSettings = { settings with maxRosterSize; adpDataset = resolvedAdpDataset };
-    let room = AuctionLib.newRoom(roomId, name, caller, startingBudget, settingsWithCap, now, isPublic, password, filter, rosterSettings, teamCount, leagueFormat, season, scoringFormat);
+    let room = AuctionLib.newRoom(roomId, name, caller, gameType, competitionMode, playoffTeams, startingBudget, settingsWithCap, now, isPublic, password, filter, rosterSettings, teamCount, leagueFormat, season, scoringFormat);
     rooms.add(roomId, room);
     // Add admin as first participant
     let pm = getRoomParticipants(roomId);
@@ -2317,20 +2554,90 @@ mixin (
     };
   };
 
-  /// Admin-only: transition room to Completed
+  /// Admin-only: transition room to Completed.
+  ///
+  /// `startWeek` is optional and its meaning depends on the room's gameType:
+  ///   - #Auction: startWeek must be null. A provided value is rejected with
+  ///     #err (never silently ignored).
+  ///   - #BestBall: startWeek is required and must satisfy 1 <= startWeek <=
+  ///     FINAL_WEEK (17). On success the BestBallConfig { startWeek } is
+  ///     written atomically with the completion.
+  ///   - #Guillotine: rejected — no lifecycle support in this build.
+  ///
+  /// Atomicity: all validation happens before any state mutation. If any check
+  /// fails, the entire call is rejected and the room is left in its prior
+  /// (pre-completion) state — no partial completion, no room stuck #Completed
+  /// with a missing/invalid Best Ball config.
   public shared ({ caller }) func endAuction(
     roomId : Types.RoomId,
+    startWeek : ?Nat,
   ) : async { #ok : (); #err : Text } {
     switch (rooms.get(roomId)) {
       case null return #err "Room not found";
       case (?room) {
         if (not isAdmin(room, caller)) return #err "Not room admin";
         if (room.state == #Completed) return #err "Room already Completed";
+        // Validate startWeek against the room's gameType BEFORE any mutation,
+        // so a rejected call leaves the room untouched.
+        switch (room.gameType) {
+          case (#Auction) {
+            switch (startWeek) {
+              case (?_) return #err "startWeek is not applicable to an Auction room";
+              case null {};
+            };
+          };
+          case (#BestBall) {
+            switch (startWeek) {
+              case null return #err "startWeek is required for a Best Ball room";
+              case (?sw) {
+                if (sw < 1) return #err "startWeek must be at least 1";
+                if (sw > AuctionLib.FINAL_WEEK) return #err ("startWeek must be at most " # AuctionLib.FINAL_WEEK.toText());
+                // Phase 12a — for a #BestBall + #HeadToHead room with playoffs
+                // (playoffTeams > 0), two further validations apply on top of the
+                // 1..17 startWeek range. They do NOT apply to #Cumulative rooms
+                // or #HeadToHead rooms without playoffs (those keep only the
+                // 1..17 constraint).
+                if (room.competitionMode == #HeadToHead and room.playoffTeams > 0) {
+                  // (a) playoffTeams must not exceed the participant count.
+                  if (room.playoffTeams > room.participants.size()) {
+                    return #err "playoffTeams cannot exceed the number of participants";
+                  };
+                  // (b) There must be enough weeks for a full regular season
+                  // before the playoffs begin:
+                  //   regularSeasonEnd(playoffTeams) - startWeek + 1 >= numberOfRounds(participantCount)
+                  // Guard the Nat subtraction: if the start week is already past
+                  // the regular season, regularSeasonEnd - sw underflows and traps.
+                  // Return a clean #err instead of letting the arithmetic run.
+                  if (sw > H2HLib.regularSeasonEnd(room.playoffTeams)) {
+                    return #err "Not enough weeks for a full regular season before playoffs begin";
+                  };
+                  let regularSeasonWeeks = H2HLib.regularSeasonEnd(room.playoffTeams) - sw + 1;
+                  if (regularSeasonWeeks < H2HLib.numberOfRounds(room.participants.size())) {
+                    return #err "Not enough weeks for a full regular season before playoffs begin";
+                  };
+                };
+              };
+            };
+          };
+          case (#Guillotine) return #err "Guillotine is not yet implemented";
+        };
         sweepExpiredNominations(roomId);
         // Re-fetch room after sweep to avoid stale state
         let roomAfterSweep = switch (rooms.get(roomId)) {
           case (?r) r;
           case null return #err "Room not found";
+        };
+        // For a #BestBall room, write the BestBallConfig atomically with the
+        // completion. startWeek was validated above, so this cannot fail.
+        switch (roomAfterSweep.gameType) {
+          case (#BestBall) {
+            let sw = switch (startWeek) {
+              case (?s) s;
+              case null return #err "startWeek is required for a Best Ball room";
+            };
+            bestBallConfigs.add(roomId, { startWeek = sw });
+          };
+          case _ {};
         };
         rooms.add(roomId, { roomAfterSweep with state = #Completed });
         activeRoomIds.remove(roomId);
@@ -3521,10 +3828,31 @@ mixin (
       return #err "Only the admin can delete rooms";
     };
 
-    // Best Ball protection — check BEFORE any removal logic. If a BestBallConfig
-    // exists for this room, refuse to delete and leave the room and its data
-    // fully intact.
-    if (bestBallConfigs.get(roomId) != null) {
+    // Best Ball protection — check BEFORE any removal logic. A BestBallConfig is
+    // written automatically the instant any Best Ball auction completes, so its
+    // mere presence no longer proves historical data. Instead, refuse to delete
+    // only when the room has at least one genuinely finalized week (a week whose
+    // sync status is #finalized) in startWeek..FINAL_WEEK for the room's season.
+    // Rooms with a BestBallConfig but zero finalized weeks (e.g. test/preview
+    // rooms) delete normally; rooms with real historical data are left intact.
+    var hasSettledWeek = false;
+    switch (bestBallConfigs.get(roomId)) {
+      case (?cfg) {
+        let season = switch (rooms.get(roomId)) {
+          case null 0;
+          case (?room) room.season;
+        };
+        var w = cfg.startWeek;
+        while (w <= AuctionLib.FINAL_WEEK) {
+          if (SyncStatusLib.isWeekFinalized(syncStatuses, season, w)) {
+            hasSettledWeek := true;
+          };
+          w += 1;
+        };
+      };
+      case null {};
+    };
+    if (hasSettledWeek) {
       return #err "Cannot delete room because it contains historical Best Ball data";
     };
 
@@ -3587,30 +3915,10 @@ mixin (
   // Best Ball configuration
   // ─────────────────────────────────────────────────────────────────────────
 
-  /// Room admin only: set or overwrite the room's BestBallConfig, marking that
-  /// this room has Best Ball tracking enabled and recording its week range.
-  /// Does not calculate or fetch anything — it only records the marker.
-  /// The backend accepts whatever endWeek is passed; the frontend/caller
-  /// defaults endWeek to 18 (a full NFL regular season) when not specified.
-  public shared ({ caller }) func setBestBallConfig(
-    roomId : Types.RoomId,
-    startWeek : Nat,
-    endWeek : Nat,
-  ) : async Result.Result<(), Text> {
-    switch (rooms.get(roomId)) {
-      case null return #err "Room not found";
-      case (?room) {
-        if (not isAdmin(room, caller)) {
-          return #err "Only the room admin can set Best Ball configuration";
-        };
-        bestBallConfigs.add(roomId, { startWeek; endWeek });
-        #ok ();
-      };
-    };
-  };
-
   /// Any room participant can read the room's BestBallConfig.
   /// Returns null when the room has no Best Ball tracking enabled.
+  /// The config carries only `startWeek`; the season always ends at the
+  /// module-level `FINAL_WEEK` constant (17).
   public query func getBestBallConfig(roomId : Types.RoomId) : async ?Types.BestBallConfig {
     bestBallConfigs.get(roomId);
   };

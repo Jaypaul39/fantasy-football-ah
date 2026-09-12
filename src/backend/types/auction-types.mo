@@ -16,6 +16,33 @@ module {
     #Completed;
   };
 
+  // ── Game type ─────────────────────────────────────────────────────────────
+
+  /// Discriminator for the room's game format. Chosen at room creation via
+  /// createRoom's `gameType` parameter. #Auction and #BestBall are supported;
+  /// #Guillotine is reserved for a future phase and is rejected at creation
+  /// (no lifecycle support). Backfilled by migration 20260905_000000: existing
+  /// rooms with a BestBallConfig entry get #BestBall, every other existing room
+  /// gets #Auction.
+  public type GameType = {
+    #Auction;
+    #BestBall;
+    #Guillotine;
+  };
+
+  // ── Competition mode ───────────────────────────────────────────────────────
+
+  /// Discriminator for how a Best Ball room's season is scored. Chosen once at
+  /// room creation via createRoom's `competitionMode` parameter and immutable
+  /// forever after. #Cumulative sums each team's optimal weekly score across the
+  /// whole season (existing Best Ball behavior, unchanged); #HeadToHead resolves
+  /// weekly matchups against a derived round-robin schedule. Irrelevant for
+  /// #Auction rooms — accepted and ignored at creation.
+  public type CompetitionMode = {
+    #Cumulative;
+    #HeadToHead;
+  };
+
   // ── Settings ───────────────────────────────────────────────────────────────
 
   public type AuctionSettings = {
@@ -80,11 +107,13 @@ module {
   };
 
   /// Best Ball tracking configuration for a room. Its presence marks that the
-  /// room has Best Ball tracking enabled and records the week range. No stats
-  /// storage or scoring calculation lives here — that is a later phase.
+  /// room has Best Ball tracking enabled and records the week the season starts
+  /// from. The season always runs from `startWeek` through the module-level
+  /// `FINAL_WEEK` constant (17) — there is no stored end week; the constant is
+  /// the single authoritative season-end source. No stats storage or scoring
+  /// calculation lives here — that is a later phase.
   public type BestBallConfig = {
     startWeek : Nat;
-    endWeek : Nat;
   };
 
   /// Raw weekly player statistics for a single player in a single season/week.
@@ -120,6 +149,19 @@ module {
     admin : UserId;
     participants : [UserId];
     state : AuctionState;
+    /// Discriminator for the room's game format. Set at creation via
+    /// createRoom's `gameType` parameter. Backfilled by migration
+    /// 20260905_000000 for pre-existing rooms.
+    gameType : GameType;
+    /// Discriminator for how the room's season is scored. Set once at creation
+    /// via createRoom's `competitionMode` parameter and immutable forever after.
+    /// Irrelevant for #Auction rooms (accepted and ignored at creation).
+    competitionMode : CompetitionMode;
+    /// Number of teams that advance to the playoffs. Set once at creation and
+    /// immutable forever after. Must be 0 for #Cumulative rooms and for
+    /// #HeadToHead rooms without playoffs; must be exactly 4, 6, or 8 for
+    /// #HeadToHead rooms with playoffs. Irrelevant for #Auction rooms.
+    playoffTeams : Nat;
     startingBudget : Nat;
     createdAt : Timestamp;
     settings : AuctionSettings;

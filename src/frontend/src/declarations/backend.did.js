@@ -9,6 +9,15 @@
 import { IDL } from '@icp-sdk/core/candid';
 
 export const RoomId = IDL.Text;
+export const GameType = IDL.Variant({
+  'BestBall' : IDL.Null,
+  'Guillotine' : IDL.Null,
+  'Auction' : IDL.Null,
+});
+export const CompetitionMode = IDL.Variant({
+  'Cumulative' : IDL.Null,
+  'HeadToHead' : IDL.Null,
+});
 export const AuctionSettings = IDL.Record({
   'minBidIncrement' : IDL.Nat,
   'maxActivePicks' : IDL.Nat,
@@ -65,6 +74,7 @@ export const Result__1 = IDL.Record({
   'hasMore' : IDL.Bool,
   'rows' : IDL.Vec(IDL.Vec(Cell)),
 });
+export const FinalizeResult = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
 export const AdpEntry = IDL.Record({
   'adp' : IDL.Float64,
   'name' : IDL.Text,
@@ -76,9 +86,28 @@ export const ADPDataset = IDL.Record({
   'importedAt' : IDL.Int,
   'entries' : IDL.Vec(AdpEntry),
 });
-export const BestBallConfig = IDL.Record({
-  'startWeek' : IDL.Nat,
-  'endWeek' : IDL.Nat,
+export const BestBallConfig = IDL.Record({ 'startWeek' : IDL.Nat });
+export const SyncStatus = IDL.Variant({
+  'finalized' : IDL.Null,
+  'notYetAttempted' : IDL.Null,
+  'partial' : IDL.Null,
+});
+export const SyncStatusRecord = IDL.Record({
+  'status' : SyncStatus,
+  'lastAttemptedAt' : IDL.Int,
+  'week' : IDL.Nat,
+  'season' : IDL.Nat,
+  'lastError' : IDL.Opt(IDL.Text),
+  'lastSuccessfulAt' : IDL.Opt(IDL.Int),
+});
+export const H2HStandingEntry = IDL.Record({
+  'displayName' : IDL.Text,
+  'gamesPlayed' : IDL.Nat,
+  'pointsFor' : IDL.Float64,
+  'ties' : IDL.Nat,
+  'wins' : IDL.Nat,
+  'losses' : IDL.Nat,
+  'participant' : UserId,
 });
 export const Timestamp = IDL.Int;
 export const ChatMessage = IDL.Record({
@@ -133,6 +162,47 @@ export const Player = IDL.Record({
   'byeWeek' : IDL.Opt(IDL.Nat),
   'position' : IDL.Text,
   'headshotUrl' : IDL.Opt(IDL.Text),
+});
+export const GameStatus = IDL.Variant({
+  'resolved' : IDL.Record({
+    'winner' : UserId,
+    'homeScore' : IDL.Float64,
+    'awayScore' : IDL.Float64,
+  }),
+  'pendingOnDependency' : IDL.Null,
+  'pendingOnSync' : IDL.Null,
+});
+export const ResolvedContestant = IDL.Record({
+  'seed' : IDL.Nat,
+  'score' : IDL.Float64,
+  'participant' : UserId,
+});
+export const BracketSlotState = IDL.Variant({
+  'resolved' : ResolvedContestant,
+  'pendingOnDependency' : IDL.Null,
+  'pendingOnSync' : IDL.Null,
+});
+export const BracketSlot = IDL.Variant({
+  'WinnerOf' : IDL.Nat,
+  'Seed' : IDL.Nat,
+});
+export const PlayoffGame = IDL.Record({
+  'away' : BracketSlot,
+  'home' : BracketSlot,
+  'week' : IDL.Nat,
+});
+export const PlayoffGameResult = IDL.Record({
+  'status' : GameStatus,
+  'away' : BracketSlotState,
+  'game' : PlayoffGame,
+  'home' : BracketSlotState,
+});
+export const PlayoffBracketResult = IDL.Record({
+  'games' : IDL.Vec(PlayoffGameResult),
+  'champion' : IDL.Variant({
+    'some' : ResolvedContestant,
+    'inProgress' : IDL.Null,
+  }),
 });
 export const UserProfile = IDL.Record({
   'displayName' : IDL.Text,
@@ -194,11 +264,14 @@ export const Room = IDL.Record({
   'teamCount' : IDL.Opt(IDL.Nat),
   'season' : IDL.Nat,
   'nominationTurnPausedAt' : IDL.Opt(Timestamp),
+  'playoffTeams' : IDL.Nat,
   'playerFilter' : PlayerFilter,
   'state' : AuctionState,
   'paidParticipants' : IDL.Vec(UserId),
   'settings' : AuctionSettings,
+  'gameType' : GameType,
   'isPublic' : IDL.Bool,
+  'competitionMode' : CompetitionMode,
   'nominationTurnStartedAt' : Timestamp,
 });
 export const ProxyBid = IDL.Record({
@@ -227,6 +300,30 @@ export const RoomSummary = IDL.Record({
   'maxParticipants' : IDL.Nat,
   'isPublic' : IDL.Bool,
   'adminId' : UserId,
+});
+export const StandingsEntry = IDL.Record({
+  'displayName' : IDL.Text,
+  'participantId' : UserId,
+  'totalPoints' : IDL.Float64,
+});
+export const LineupSlot = IDL.Record({
+  'playerId' : IDL.Opt(IDL.Text),
+  'slot' : IDL.Text,
+  'position' : IDL.Text,
+  'points' : IDL.Float64,
+});
+export const LineupBenchEntry = IDL.Record({
+  'playerId' : IDL.Text,
+  'points' : IDL.Float64,
+});
+export const WeeklyLineupView = IDL.Record({
+  'total' : IDL.Float64,
+  'displayName' : IDL.Text,
+  'starters' : IDL.Vec(LineupSlot),
+  'week' : IDL.Nat,
+  'participantId' : UserId,
+  'bench' : IDL.Vec(LineupBenchEntry),
+  'roomId' : RoomId,
 });
 export const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
 export const WeeklyPlayerStats = IDL.Record({
@@ -266,6 +363,7 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
       [],
     ),
+  'backfillFinalizedScores' : IDL.Func([], [IDL.Nat], []),
   'checkIsAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'clearNominationQueue' : IDL.Func([RoomId], [], []),
   'clearPlayers' : IDL.Func(
@@ -273,8 +371,16 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
+  'computeDedupSeasonWeeks' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Nat))],
+      [],
+    ),
   'createRoom' : IDL.Func(
       [
+        GameType,
+        CompetitionMode,
+        IDL.Nat,
         IDL.Text,
         IDL.Nat,
         AuctionSettings,
@@ -302,12 +408,13 @@ export const idlService = IDL.Service({
       [],
     ),
   'endAuction' : IDL.Func(
-      [RoomId],
+      [RoomId, IDL.Opt(IDL.Nat)],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
   'execute' : IDL.Func([IDL.Text], [Result__1], ['query']),
   'fetchRssFeeds' : IDL.Func([], [IDL.Text], []),
+  'finalizeWeek' : IDL.Func([IDL.Nat, IDL.Nat], [FinalizeResult], []),
   'getADPDataset' : IDL.Func([], [IDL.Opt(ADPDataset)], ['query']),
   'getADPDatasetByType' : IDL.Func(
       [IDL.Text],
@@ -315,6 +422,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getActiveADPDataset' : IDL.Func([], [IDL.Opt(ADPDataset)], ['query']),
+  'getApiDoc' : IDL.Func([], [IDL.Text], ['query']),
   'getBestBallConfig' : IDL.Func(
       [RoomId],
       [IDL.Opt(BestBallConfig)],
@@ -327,7 +435,13 @@ export const idlService = IDL.Service({
     ),
   'getCycleBalance' : IDL.Func([], [IDL.Nat], ['query']),
   'getDisplayName' : IDL.Func([UserId], [IDL.Opt(IDL.Text)], ['query']),
+  'getFlaggedWeeks' : IDL.Func([], [IDL.Vec(SyncStatusRecord)], []),
   'getGiphyApiKey' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
+  'getH2HStandings' : IDL.Func(
+      [RoomId],
+      [IDL.Variant({ 'ok' : IDL.Vec(H2HStandingEntry), 'err' : IDL.Text })],
+      ['query'],
+    ),
   'getHeartbeatDiagnostics' : IDL.Func(
       [],
       [
@@ -408,6 +522,11 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getPlayersWithADP' : IDL.Func([], [IDL.Vec(Player)], ['query']),
+  'getPlayoffBracket' : IDL.Func(
+      [RoomId],
+      [IDL.Variant({ 'ok' : PlayoffBracketResult, 'err' : IDL.Text })],
+      [],
+    ),
   'getProfile' : IDL.Func([], [UserProfile], ['query']),
   'getRoomParticipantPrincipals' : IDL.Func(
       [RoomId],
@@ -429,7 +548,23 @@ export const idlService = IDL.Service({
   'getRooms' : IDL.Func([], [IDL.Vec(RoomSummary)], []),
   'getRssFeedUrls' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getRssRefreshIntervalSecs' : IDL.Func([], [IDL.Nat], ['query']),
+  'getStandings' : IDL.Func(
+      [RoomId],
+      [IDL.Variant({ 'ok' : IDL.Vec(StandingsEntry), 'err' : IDL.Text })],
+      ['query'],
+    ),
+  'getSyncStatusRecords' : IDL.Func([], [IDL.Vec(SyncStatusRecord)], ['query']),
   'getUserRooms' : IDL.Func([], [IDL.Vec(RoomSummary)], []),
+  'getWeeklyLineup' : IDL.Func(
+      [RoomId, UserId, IDL.Nat],
+      [IDL.Variant({ 'ok' : WeeklyLineupView, 'err' : IDL.Text })],
+      ['query'],
+    ),
+  'getWeeklyStandings' : IDL.Func(
+      [RoomId, IDL.Nat],
+      [IDL.Variant({ 'ok' : IDL.Vec(StandingsEntry), 'err' : IDL.Text })],
+      ['query'],
+    ),
   'importADPDataset' : IDL.Func(
       [IDL.Vec(AdpEntry), IDL.Opt(IDL.Text)],
       [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
@@ -477,6 +612,11 @@ export const idlService = IDL.Service({
       [],
     ),
   'reconcileMembershipIndexes' : IDL.Func([], [], []),
+  'recordSyncStatus' : IDL.Func(
+      [IDL.Nat, IDL.Nat, SyncStatus, IDL.Opt(IDL.Text), IDL.Opt(IDL.Int)],
+      [IDL.Variant({ 'ok' : SyncStatusRecord, 'err' : IDL.Text })],
+      [],
+    ),
   'recoverAdmin' : IDL.Func([IDL.Text], [Result], []),
   'removeADPDataset' : IDL.Func(
       [IDL.Text],
@@ -528,7 +668,6 @@ export const idlService = IDL.Service({
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
       [],
     ),
-  'setBestBallConfig' : IDL.Func([RoomId, IDL.Nat, IDL.Nat], [Result], []),
   'setByeWeeks' : IDL.Func(
       [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
       [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -588,7 +727,7 @@ export const idlService = IDL.Service({
     ),
   'sweepNominations' : IDL.Func([RoomId], [], []),
   'syncWeeklyStats' : IDL.Func(
-      [IDL.Nat, IDL.Nat, IDL.Vec(WeeklyPlayerStats)],
+      [RoomId, IDL.Nat, IDL.Nat, IDL.Vec(WeeklyPlayerStats)],
       [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
       [],
     ),
@@ -623,6 +762,15 @@ export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
   const RoomId = IDL.Text;
+  const GameType = IDL.Variant({
+    'BestBall' : IDL.Null,
+    'Guillotine' : IDL.Null,
+    'Auction' : IDL.Null,
+  });
+  const CompetitionMode = IDL.Variant({
+    'Cumulative' : IDL.Null,
+    'HeadToHead' : IDL.Null,
+  });
   const AuctionSettings = IDL.Record({
     'minBidIncrement' : IDL.Nat,
     'maxActivePicks' : IDL.Nat,
@@ -679,6 +827,7 @@ export const idlFactory = ({ IDL }) => {
     'hasMore' : IDL.Bool,
     'rows' : IDL.Vec(IDL.Vec(Cell)),
   });
+  const FinalizeResult = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const AdpEntry = IDL.Record({
     'adp' : IDL.Float64,
     'name' : IDL.Text,
@@ -690,9 +839,28 @@ export const idlFactory = ({ IDL }) => {
     'importedAt' : IDL.Int,
     'entries' : IDL.Vec(AdpEntry),
   });
-  const BestBallConfig = IDL.Record({
-    'startWeek' : IDL.Nat,
-    'endWeek' : IDL.Nat,
+  const BestBallConfig = IDL.Record({ 'startWeek' : IDL.Nat });
+  const SyncStatus = IDL.Variant({
+    'finalized' : IDL.Null,
+    'notYetAttempted' : IDL.Null,
+    'partial' : IDL.Null,
+  });
+  const SyncStatusRecord = IDL.Record({
+    'status' : SyncStatus,
+    'lastAttemptedAt' : IDL.Int,
+    'week' : IDL.Nat,
+    'season' : IDL.Nat,
+    'lastError' : IDL.Opt(IDL.Text),
+    'lastSuccessfulAt' : IDL.Opt(IDL.Int),
+  });
+  const H2HStandingEntry = IDL.Record({
+    'displayName' : IDL.Text,
+    'gamesPlayed' : IDL.Nat,
+    'pointsFor' : IDL.Float64,
+    'ties' : IDL.Nat,
+    'wins' : IDL.Nat,
+    'losses' : IDL.Nat,
+    'participant' : UserId,
   });
   const Timestamp = IDL.Int;
   const ChatMessage = IDL.Record({
@@ -747,6 +915,44 @@ export const idlFactory = ({ IDL }) => {
     'byeWeek' : IDL.Opt(IDL.Nat),
     'position' : IDL.Text,
     'headshotUrl' : IDL.Opt(IDL.Text),
+  });
+  const GameStatus = IDL.Variant({
+    'resolved' : IDL.Record({
+      'winner' : UserId,
+      'homeScore' : IDL.Float64,
+      'awayScore' : IDL.Float64,
+    }),
+    'pendingOnDependency' : IDL.Null,
+    'pendingOnSync' : IDL.Null,
+  });
+  const ResolvedContestant = IDL.Record({
+    'seed' : IDL.Nat,
+    'score' : IDL.Float64,
+    'participant' : UserId,
+  });
+  const BracketSlotState = IDL.Variant({
+    'resolved' : ResolvedContestant,
+    'pendingOnDependency' : IDL.Null,
+    'pendingOnSync' : IDL.Null,
+  });
+  const BracketSlot = IDL.Variant({ 'WinnerOf' : IDL.Nat, 'Seed' : IDL.Nat });
+  const PlayoffGame = IDL.Record({
+    'away' : BracketSlot,
+    'home' : BracketSlot,
+    'week' : IDL.Nat,
+  });
+  const PlayoffGameResult = IDL.Record({
+    'status' : GameStatus,
+    'away' : BracketSlotState,
+    'game' : PlayoffGame,
+    'home' : BracketSlotState,
+  });
+  const PlayoffBracketResult = IDL.Record({
+    'games' : IDL.Vec(PlayoffGameResult),
+    'champion' : IDL.Variant({
+      'some' : ResolvedContestant,
+      'inProgress' : IDL.Null,
+    }),
   });
   const UserProfile = IDL.Record({
     'displayName' : IDL.Text,
@@ -808,11 +1014,14 @@ export const idlFactory = ({ IDL }) => {
     'teamCount' : IDL.Opt(IDL.Nat),
     'season' : IDL.Nat,
     'nominationTurnPausedAt' : IDL.Opt(Timestamp),
+    'playoffTeams' : IDL.Nat,
     'playerFilter' : PlayerFilter,
     'state' : AuctionState,
     'paidParticipants' : IDL.Vec(UserId),
     'settings' : AuctionSettings,
+    'gameType' : GameType,
     'isPublic' : IDL.Bool,
+    'competitionMode' : CompetitionMode,
     'nominationTurnStartedAt' : Timestamp,
   });
   const ProxyBid = IDL.Record({
@@ -841,6 +1050,30 @@ export const idlFactory = ({ IDL }) => {
     'maxParticipants' : IDL.Nat,
     'isPublic' : IDL.Bool,
     'adminId' : UserId,
+  });
+  const StandingsEntry = IDL.Record({
+    'displayName' : IDL.Text,
+    'participantId' : UserId,
+    'totalPoints' : IDL.Float64,
+  });
+  const LineupSlot = IDL.Record({
+    'playerId' : IDL.Opt(IDL.Text),
+    'slot' : IDL.Text,
+    'position' : IDL.Text,
+    'points' : IDL.Float64,
+  });
+  const LineupBenchEntry = IDL.Record({
+    'playerId' : IDL.Text,
+    'points' : IDL.Float64,
+  });
+  const WeeklyLineupView = IDL.Record({
+    'total' : IDL.Float64,
+    'displayName' : IDL.Text,
+    'starters' : IDL.Vec(LineupSlot),
+    'week' : IDL.Nat,
+    'participantId' : UserId,
+    'bench' : IDL.Vec(LineupBenchEntry),
+    'roomId' : RoomId,
   });
   const Result = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const WeeklyPlayerStats = IDL.Record({
@@ -880,6 +1113,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
         [],
       ),
+    'backfillFinalizedScores' : IDL.Func([], [IDL.Nat], []),
     'checkIsAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'clearNominationQueue' : IDL.Func([RoomId], [], []),
     'clearPlayers' : IDL.Func(
@@ -887,8 +1121,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
+    'computeDedupSeasonWeeks' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Tuple(IDL.Nat, IDL.Nat))],
+        [],
+      ),
     'createRoom' : IDL.Func(
         [
+          GameType,
+          CompetitionMode,
+          IDL.Nat,
           IDL.Text,
           IDL.Nat,
           AuctionSettings,
@@ -916,12 +1158,13 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'endAuction' : IDL.Func(
-        [RoomId],
+        [RoomId, IDL.Opt(IDL.Nat)],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
     'execute' : IDL.Func([IDL.Text], [Result__1], ['query']),
     'fetchRssFeeds' : IDL.Func([], [IDL.Text], []),
+    'finalizeWeek' : IDL.Func([IDL.Nat, IDL.Nat], [FinalizeResult], []),
     'getADPDataset' : IDL.Func([], [IDL.Opt(ADPDataset)], ['query']),
     'getADPDatasetByType' : IDL.Func(
         [IDL.Text],
@@ -929,6 +1172,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getActiveADPDataset' : IDL.Func([], [IDL.Opt(ADPDataset)], ['query']),
+    'getApiDoc' : IDL.Func([], [IDL.Text], ['query']),
     'getBestBallConfig' : IDL.Func(
         [RoomId],
         [IDL.Opt(BestBallConfig)],
@@ -941,7 +1185,13 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getCycleBalance' : IDL.Func([], [IDL.Nat], ['query']),
     'getDisplayName' : IDL.Func([UserId], [IDL.Opt(IDL.Text)], ['query']),
+    'getFlaggedWeeks' : IDL.Func([], [IDL.Vec(SyncStatusRecord)], []),
     'getGiphyApiKey' : IDL.Func([], [IDL.Opt(IDL.Text)], ['query']),
+    'getH2HStandings' : IDL.Func(
+        [RoomId],
+        [IDL.Variant({ 'ok' : IDL.Vec(H2HStandingEntry), 'err' : IDL.Text })],
+        ['query'],
+      ),
     'getHeartbeatDiagnostics' : IDL.Func(
         [],
         [
@@ -1022,6 +1272,11 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getPlayersWithADP' : IDL.Func([], [IDL.Vec(Player)], ['query']),
+    'getPlayoffBracket' : IDL.Func(
+        [RoomId],
+        [IDL.Variant({ 'ok' : PlayoffBracketResult, 'err' : IDL.Text })],
+        [],
+      ),
     'getProfile' : IDL.Func([], [UserProfile], ['query']),
     'getRoomParticipantPrincipals' : IDL.Func(
         [RoomId],
@@ -1043,7 +1298,27 @@ export const idlFactory = ({ IDL }) => {
     'getRooms' : IDL.Func([], [IDL.Vec(RoomSummary)], []),
     'getRssFeedUrls' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getRssRefreshIntervalSecs' : IDL.Func([], [IDL.Nat], ['query']),
+    'getStandings' : IDL.Func(
+        [RoomId],
+        [IDL.Variant({ 'ok' : IDL.Vec(StandingsEntry), 'err' : IDL.Text })],
+        ['query'],
+      ),
+    'getSyncStatusRecords' : IDL.Func(
+        [],
+        [IDL.Vec(SyncStatusRecord)],
+        ['query'],
+      ),
     'getUserRooms' : IDL.Func([], [IDL.Vec(RoomSummary)], []),
+    'getWeeklyLineup' : IDL.Func(
+        [RoomId, UserId, IDL.Nat],
+        [IDL.Variant({ 'ok' : WeeklyLineupView, 'err' : IDL.Text })],
+        ['query'],
+      ),
+    'getWeeklyStandings' : IDL.Func(
+        [RoomId, IDL.Nat],
+        [IDL.Variant({ 'ok' : IDL.Vec(StandingsEntry), 'err' : IDL.Text })],
+        ['query'],
+      ),
     'importADPDataset' : IDL.Func(
         [IDL.Vec(AdpEntry), IDL.Opt(IDL.Text)],
         [IDL.Variant({ 'ok' : IDL.Text, 'err' : IDL.Text })],
@@ -1091,6 +1366,11 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'reconcileMembershipIndexes' : IDL.Func([], [], []),
+    'recordSyncStatus' : IDL.Func(
+        [IDL.Nat, IDL.Nat, SyncStatus, IDL.Opt(IDL.Text), IDL.Opt(IDL.Int)],
+        [IDL.Variant({ 'ok' : SyncStatusRecord, 'err' : IDL.Text })],
+        [],
+      ),
     'recoverAdmin' : IDL.Func([IDL.Text], [Result], []),
     'removeADPDataset' : IDL.Func(
         [IDL.Text],
@@ -1142,7 +1422,6 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
         [],
       ),
-    'setBestBallConfig' : IDL.Func([RoomId, IDL.Nat, IDL.Nat], [Result], []),
     'setByeWeeks' : IDL.Func(
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))],
         [IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text })],
@@ -1202,7 +1481,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'sweepNominations' : IDL.Func([RoomId], [], []),
     'syncWeeklyStats' : IDL.Func(
-        [IDL.Nat, IDL.Nat, IDL.Vec(WeeklyPlayerStats)],
+        [RoomId, IDL.Nat, IDL.Nat, IDL.Vec(WeeklyPlayerStats)],
         [IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text })],
         [],
       ),

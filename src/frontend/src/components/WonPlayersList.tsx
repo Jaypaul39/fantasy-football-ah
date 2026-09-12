@@ -305,6 +305,8 @@ interface WonPlayersListProps {
   participants?: ParticipantView[];
   rosterSettings?: RosterSettings | null;
   maxRosterSize?: number;
+  /** When false, per-player news sections are hidden (e.g. on the Draft Board). */
+  showNews?: boolean;
 }
 
 const POSITION_STYLES: Record<
@@ -338,7 +340,13 @@ function sortWonPlayers(players: WonPlayer[], mode: SortMode): WonPlayer[] {
   });
 }
 
-function PlayerRow({ player }: { player: WonPlayer }) {
+function PlayerRow({
+  player,
+  showNews,
+}: {
+  player: WonPlayer;
+  showNews: boolean;
+}) {
   const ps = positionStyle(player.position);
   return (
     <div
@@ -371,7 +379,7 @@ function PlayerRow({ player }: { player: WonPlayer }) {
           ${player.winningBid.toString()}
         </span>
       </div>
-      <PlayerNewsSection playerName={player.playerName} />
+      {showNews && <PlayerNewsSection playerName={player.playerName} />}
     </div>
   );
 }
@@ -397,6 +405,7 @@ export default function WonPlayersList({
   participants = [],
   rosterSettings,
   maxRosterSize,
+  showNews = true,
 }: WonPlayersListProps) {
   const [sort, setSort] = useState<SortMode>("bid");
 
@@ -492,7 +501,11 @@ export default function WonPlayersList({
                 ) : (
                   <>
                     {players.map((p) => (
-                      <PlayerRow key={p.playerId} player={p} />
+                      <PlayerRow
+                        key={p.playerId}
+                        player={p}
+                        showNews={showNews}
+                      />
                     ))}
                     <SummaryLine players={players} />
                   </>
@@ -507,7 +520,7 @@ export default function WonPlayersList({
       {!showAll && sortedPlayers.length > 0 && (
         <div className="space-y-0.5">
           {sortedPlayers.map((p) => (
-            <PlayerRow key={p.playerId} player={p} />
+            <PlayerRow key={p.playerId} player={p} showNews={showNews} />
           ))}
           <SummaryLine players={sortedPlayers} />
         </div>

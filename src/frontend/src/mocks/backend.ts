@@ -1,4 +1,11 @@
-import { AuctionState, BidHistoryEventType, NominationState } from "../backend";
+import {
+  AuctionState,
+  BidHistoryEventType,
+  CompetitionMode,
+  GameType,
+  NominationState,
+  SyncStatus,
+} from "../backend";
 import type { backendInterface } from "../backend.d.ts";
 
 // ── Mock principals ────────────────────────────────────────────────────────
@@ -21,6 +28,8 @@ const otherPrincipal1 = makePrincipal(
 );
 const otherPrincipal2 = makePrincipal(
   "bbbbb-bb00-bbbb-bbbbb-bbb00-bbbbb-bbb-bb");
+const otherPrincipal3 = makePrincipal(
+  "ccccc-cc00-cccc-ccccc-ccc00-ccccc-ccc-cc");
 
 // ── Roster settings (exercises slotted roster + reserve ceiling) ───────────
 const mockRosterSettings = {
@@ -124,6 +133,9 @@ function buildRoomView(roomId: string, state: AuctionState) {
       scoringFormat: { __kind__: "halfPpr", halfPpr: null } as const,
       season: BigInt(2026),
       startingBudget: BigInt(200),
+      gameType: GameType.BestBall,
+      competitionMode: CompetitionMode.HeadToHead,
+      playoffTeams: BigInt(0),
       state,
       participants: [mockPrincipal, otherPrincipal1, otherPrincipal2],
       admin: mockPrincipal,
@@ -229,9 +241,14 @@ function buildRoomView(roomId: string, state: AuctionState) {
 // That exercises the reserve ceiling path.
 
 // ── Best Ball config (in-memory store keyed by roomId) ─────────────────────
-const bestBallConfigs = new Map<string, { startWeek: bigint; endWeek: bigint }>();
+const bestBallConfigs = new Map<string, { startWeek: bigint }>();
+// Seed a config so the "My Team" week selector is bounded to startWeek
+// and useCurrentWeek can resolve a current week. Weeks 1..4; week 4 is the
+// current (synced) week, weeks 1-3 are unsynced for navigation testing.
+bestBallConfigs.set("room-001", { startWeek: BigInt(1) });
 
 export const mockBackend: backendInterface = {
+  getApiDoc: async () => "",
   fetchRssFeeds: async () => "",
   createRoom: async () => ({ __kind__: "ok", ok: "room-001" }),
 
@@ -272,14 +289,200 @@ export const mockBackend: backendInterface = {
   getBestBallConfig: async (roomId: string) =>
     bestBallConfigs.get(roomId) ?? null,
 
-  setBestBallConfig: async (
+  getWeeklyLineup: async (
     roomId: string,
-    startWeek: bigint,
-    endWeek: bigint,
+    participantId: import("@icp-sdk/core/principal").Principal,
+    week: bigint,
   ) => {
-    bestBallConfigs.set(roomId, { startWeek, endWeek });
-    return { __kind__: "ok" as const, ok: null };
+    // Weeks 1-3 are unsynced (empty starters); week 4 (the current week) is
+    // synced with a full lineup. This lets the visual QA verify both the
+    // synced lineup and the distinct "hasn't synced yet" state.
+    if (week < BigInt(4)) {
+      return {
+        __kind__: "ok" as const,
+        ok: {
+          roomId,
+          participantId,
+          week,
+          displayName: "You",
+          total: 0,
+          starters: [],
+          bench: [],
+        },
+      };
+    }
+    // The opponent (any participant other than the current user) gets a
+    // distinct name and score so the H2H matchup renders a genuine win/loss
+    // rather than a self-tie. The current user's lineup stays "You" @ 98.
+    const isOpponent =
+      participantId.toText() !== "2vxsx-fae";
+    return {
+      __kind__: "ok" as const,
+      ok: {
+        roomId,
+        participantId,
+        week,
+        displayName: isOpponent ? "Alice" : "You",
+        total: isOpponent ? 84 : 98,
+        starters: [
+          { slot: "QB", position: "QB", playerId: "QB01", points: 28 },
+          { slot: "RB", position: "RB", playerId: "RB01", points: 22 },
+          { slot: "RB", position: "RB", playerId: "RB02", points: 18 },
+          { slot: "WR", position: "WR", playerId: "WR01", points: 15 },
+          { slot: "WR", position: "WR", playerId: "WR02", points: 10 },
+          { slot: "TE", position: "TE", playerId: "TE01", points: 5 },
+          { slot: "FLEX", position: "WR", playerId: "WR03", points: 0 },
+        ],
+        bench: [
+          { playerId: "WR04", points: 0 },
+        ],
+      },
+    };
   },
+
+  getStandings: async (roomId: string) => ({
+    __kind__: "ok" as const,
+    ok: [
+      {
+        participantId: mockPrincipal,
+        displayName: "You",
+        totalPoints: 98,
+      },
+      {
+        participantId: otherPrincipal1,
+        displayName: "Alice",
+        totalPoints: 77,
+      },
+      {
+        participantId: otherPrincipal2,
+        displayName: "Bob",
+        totalPoints: 0,
+      },
+    ],
+  }),
+
+  getH2HStandings: async (roomId: string) => ({
+    __kind__: "ok" as const,
+    ok: [
+      {
+        participant: mockPrincipal,
+        displayName: "You",
+        wins: BigInt(3),
+        losses: BigInt(1),
+        ties: BigInt(0),
+        pointsFor: 320.5,
+        gamesPlayed: BigInt(4),
+      },
+      {
+        participant: otherPrincipal1,
+        displayName: "Alice",
+        wins: BigInt(2),
+        losses: BigInt(2),
+        ties: BigInt(0),
+        pointsFor: 305.0,
+        gamesPlayed: BigInt(4),
+      },
+      {
+        participant: otherPrincipal2,
+        displayName: "Bob",
+        wins: BigInt(1),
+        losses: BigInt(3),
+        ties: BigInt(0),
+        pointsFor: 280.25,
+        gamesPlayed: BigInt(4),
+      },
+    ],
+  }),
+
+  // 4-team playoff bracket fixture. Week 15 = Semifinals (Seed1 v Seed4
+  // resolved; Seed2 v Seed3 pending-on-sync), Week 16 = Finals
+  // (pending-on-dependency on the two semifinal winners). Champion in progress.
+  getPlayoffBracket: async (roomId: string) => ({
+    __kind__: "ok" as const,
+    ok: {
+      games: [
+        {
+          game: {
+            week: BigInt(15),
+            home: { __kind__: "Seed", Seed: BigInt(1) },
+            away: { __kind__: "Seed", Seed: BigInt(4) },
+          },
+          home: {
+            __kind__: "resolved",
+            resolved: {
+              participant: mockPrincipal,
+              seed: BigInt(1),
+              score: 120.5,
+            },
+          },
+          away: {
+            __kind__: "resolved",
+            resolved: {
+              participant: otherPrincipal3,
+              seed: BigInt(4),
+              score: 88.0,
+            },
+          },
+          status: {
+            __kind__: "resolved",
+            resolved: {
+              winner: mockPrincipal,
+              homeScore: 120.5,
+              awayScore: 88.0,
+            },
+          },
+        },
+        {
+          game: {
+            week: BigInt(15),
+            home: { __kind__: "Seed", Seed: BigInt(2) },
+            away: { __kind__: "Seed", Seed: BigInt(3) },
+          },
+          home: { __kind__: "pendingOnSync", pendingOnSync: null },
+          away: { __kind__: "pendingOnSync", pendingOnSync: null },
+          status: { __kind__: "pendingOnSync", pendingOnSync: null },
+        },
+        {
+          game: {
+            week: BigInt(16),
+            home: { __kind__: "WinnerOf", WinnerOf: BigInt(0) },
+            away: { __kind__: "WinnerOf", WinnerOf: BigInt(1) },
+          },
+          home: {
+            __kind__: "pendingOnDependency",
+            pendingOnDependency: null,
+          },
+          away: {
+            __kind__: "pendingOnDependency",
+            pendingOnDependency: null,
+          },
+          status: { __kind__: "pendingOnDependency", pendingOnDependency: null },
+        },
+      ],
+      champion: { __kind__: "inProgress", inProgress: null },
+    },
+  }),
+
+  getWeeklyStandings: async (roomId: string, week: bigint) => ({
+    __kind__: "ok" as const,
+    ok: [
+      {
+        participantId: otherPrincipal1,
+        displayName: "Alice",
+        totalPoints: 120,
+      },
+      {
+        participantId: mockPrincipal,
+        displayName: "You",
+        totalPoints: 98,
+      },
+      {
+        participantId: otherPrincipal2,
+        displayName: "Bob",
+        totalPoints: 50,
+      },
+    ],
+  }),
 
   getRooms: async () => [
     {
@@ -503,6 +706,61 @@ export const mockBackend: backendInterface = {
   importPlayers: async () => ({ __kind__: "ok", ok: BigInt(0) }),
 
   syncWeeklyStats: async () => ({ __kind__: "ok", ok: BigInt(0) }),
+
+  computeDedupSeasonWeeks: async () => [],
+
+  getSyncStatusRecords: async () => [
+    {
+      season: BigInt(2026),
+      week: BigInt(1),
+      lastAttemptedAt: BigInt(Date.now() - 5 * 86400_000) * 1_000_000n,
+      status: SyncStatus.finalized,
+      lastError: undefined,
+      lastSuccessfulAt: BigInt(Date.now() - 5 * 86400_000) * 1_000_000n,
+    },
+    {
+      season: BigInt(2026),
+      week: BigInt(2),
+      lastAttemptedAt: BigInt(Date.now() - 2 * 86400_000) * 1_000_000n,
+      status: SyncStatus.partial,
+      lastError: undefined,
+      lastSuccessfulAt: BigInt(Date.now() - 2 * 86400_000) * 1_000_000n,
+    },
+    {
+      season: BigInt(2026),
+      week: BigInt(3),
+      lastAttemptedAt: BigInt(Date.now() - 1 * 86400_000) * 1_000_000n,
+      status: SyncStatus.partial,
+      lastError: undefined,
+      lastSuccessfulAt: undefined,
+    },
+    {
+      season: BigInt(2026),
+      week: BigInt(4),
+      lastAttemptedAt: BigInt(0),
+      status: SyncStatus.notYetAttempted,
+      lastError: undefined,
+      lastSuccessfulAt: undefined,
+    },
+  ],
+
+  getFlaggedWeeks: async () => [],
+
+  recordSyncStatus: async () => ({
+    __kind__: "ok" as const,
+    ok: {
+      season: BigInt(0),
+      week: BigInt(0),
+      lastAttemptedAt: BigInt(0),
+      status: SyncStatus.notYetAttempted,
+      lastError: undefined,
+      lastSuccessfulAt: undefined,
+    },
+  }),
+
+  backfillFinalizedScores: async () => BigInt(0),
+
+  finalizeWeek: async () => ({ __kind__: "ok" as const, ok: BigInt(0) }),
 
   importADPDataset: async () => ({ __kind__: "ok", ok: "imported" }),
 

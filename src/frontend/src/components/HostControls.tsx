@@ -38,6 +38,7 @@ import { useSendMessage } from "../hooks/useRoomPolling";
 import {
   type AuctionSettings,
   AuctionState,
+  GameType,
   type ParticipantView,
   type RoomId,
   type UserId,
@@ -860,6 +861,12 @@ export function HostControls({
   const { actor } = useBackend();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
 
+  // Best Ball end-auction start week. gameType is resolved from the room so
+  // HostControls can decide whether to collect a start week without the parent
+  // needing to pass it down.
+  const [gameType, setGameType] = useState<GameType | null>(null);
+  const [startWeekInput, setStartWeekInput] = useState("");
+
   const [noteText, setNoteText] = useState("");
   const [noteLoading, setNoteLoading] = useState(false);
   const sendMessage = useSendMessage(roomId);
@@ -893,6 +900,57 @@ export function HostControls({
       setBidMinutes(bid.minutes);
     }
   }, [settings]);
+
+  // Resolve the room's game type so the End Auction flow knows whether to
+  // collect a start week (Best Ball) or pass null (Auction).
+  useEffect(() => {
+    if (!actor) return;
+    let cancelled = false;
+    actor
+      .getRoomState(roomId)
+      .then((res) => {
+        if (cancelled || res.__kind__ !== "ok") return;
+        setGameType(res.ok.room.gameType);
+      })
+      .catch(() => {
+        // Non-fatal: default to no start-week input if the room can't be read.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [actor, roomId]);
+
+  // Convenience pre-fill for Best Ball: fetch the current NFL week from
+  // Sleeper and use it only when the season is regular. Any failure,
+  // non-regular season, or unexpected shape leaves the field blank — this is
+  // purely a convenience and never blocks or errors the flow.
+  useEffect(() => {
+    if (gameType !== GameType.BestBall) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch("https://api.sleeper.app/v1/state/nfl");
+        if (!response.ok) return;
+        const raw: unknown = await response.json();
+        const state =
+          raw && typeof raw === "object"
+            ? (raw as { season_type?: unknown; week?: unknown })
+            : null;
+        if (
+          state &&
+          state.season_type === "regular" &&
+          typeof state.week === "number"
+        ) {
+          if (!cancelled) setStartWeekInput(String(state.week));
+        }
+      } catch {
+        // Convenience only — leave blank on any failure.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [gameType]);
 
   const handlePostNote = async () => {
     const t = noteText.trim();
@@ -930,6 +988,34 @@ export function HostControls({
       console.error(err);
     } finally {
       setPendingAction(null);
+    }
+  }
+
+  // Best Ball end-auction start week validation (client-side UX only; the
+  // backend remains the authority). Auction rooms collect no start week.
+  const isBestBall = gameType === GameType.BestBall;
+  const parsedStartWeek = Number.parseInt(startWeekInput, 10);
+  const startWeekValid =
+    !isBestBall ||
+    (startWeekInput.trim() !== "" &&
+      !Number.isNaN(parsedStartWeek) &&
+      parsedStartWeek >= 1 &&
+      parsedStartWeek <= 17);
+
+  function handleEndAuction() {
+    if (!actor) return;
+    if (isBestBall) {
+      if (!startWeekValid) {
+        toast.error("Enter a valid start week (1-17).");
+        return;
+      }
+      runAction(
+        "end",
+        () => actor!.endAuction(roomId, BigInt(parsedStartWeek)),
+        "Auction ended.",
+      );
+    } else {
+      runAction("end", () => actor!.endAuction(roomId, null), "Auction ended.");
     }
   }
 
@@ -1409,13 +1495,11 @@ export function HostControls({
             <EndAuctionButton
               disabled={isLoading}
               loading={pendingAction === "end"}
-              onConfirm={() =>
-                runAction(
-                  "end",
-                  () => actor!.endAuction(roomId),
-                  "Auction ended.",
-                )
-              }
+              onConfirm={handleEndAuction}
+              showStartWeek={isBestBall}
+              startWeek={startWeekInput}
+              onStartWeekChange={setStartWeekInput}
+              startWeekValid={startWeekValid}
             />
           </>
         )}
@@ -1446,13 +1530,11 @@ export function HostControls({
             <EndAuctionButton
               disabled={isLoading}
               loading={pendingAction === "end"}
-              onConfirm={() =>
-                runAction(
-                  "end",
-                  () => actor!.endAuction(roomId),
-                  "Auction ended.",
-                )
-              }
+              onConfirm={handleEndAuction}
+              showStartWeek={isBestBall}
+              startWeek={startWeekInput}
+              onStartWeekChange={setStartWeekInput}
+              startWeekValid={startWeekValid}
             />
           </>
         )}
@@ -1465,10 +1547,18 @@ function EndAuctionButton({
   disabled,
   loading,
   onConfirm,
+  showStartWeek,
+  startWeek,
+  onStartWeekChange,
+  startWeekValid,
 }: {
   disabled: boolean;
   loading: boolean;
   onConfirm: () => void;
+  showStartWeek: boolean;
+  startWeek: string;
+  onStartWeekChange: (v: string) => void;
+  startWeekValid: boolean;
 }) {
   return (
     <AlertDialog>
@@ -1501,12 +1591,44 @@ function EndAuctionButton({
             expire and no more bidding will be allowed. This cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
+
+        {showStartWeek && (
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="end-auction-start-week"
+              className="text-xs text-muted-foreground font-mono uppercase tracking-wider"
+            >
+              Best Ball Start Week
+            </Label>
+            <Input
+              id="end-auction-start-week"
+              type="number"
+              min={1}
+              max={17}
+              value={startWeek}
+              onChange={(e) => onStartWeekChange(e.target.value)}
+              placeholder="1-17"
+              className="h-9 w-24 font-mono text-xs text-center bg-background border-input"
+              data-ocid="end-auction-start-week-input"
+            />
+            {!startWeekValid && (
+              <p
+                className="text-[11px] text-destructive font-mono"
+                data-ocid="end-auction-start-week-error"
+              >
+                Enter a valid start week (1-17).
+              </p>
+            )}
+          </div>
+        )}
+
         <AlertDialogFooter>
           <AlertDialogCancel className="border-border text-muted-foreground hover:text-foreground">
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
+            disabled={loading || (showStartWeek && !startWeekValid)}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             data-ocid="end-auction-confirm-btn"
           >

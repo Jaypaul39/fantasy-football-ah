@@ -18,6 +18,7 @@ import {
   MessageCircle,
   Search,
   Settings,
+  Trophy,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ADPDataset as BackendADPDataset, Player } from "../backend.d.ts";
@@ -28,6 +29,7 @@ import { HostControls } from "../components/HostControls";
 import { NewsTab } from "../components/NewsTab";
 import NominateTab from "../components/NominateTab";
 import { NominationTimerBanner } from "../components/NominationTimerBanner";
+import { ScoresTab } from "../components/ScoresTab";
 import { WaitingRoom } from "../components/WaitingRoom";
 import { useAuth } from "../hooks/useAuth";
 import { useBackend } from "../hooks/useBackend";
@@ -39,12 +41,20 @@ import {
 import type { ADPDataset } from "../lib/adp-types";
 import {
   AuctionState,
+  CompetitionMode,
+  GameType,
   NominationState,
   getAvailableBudget,
   getPrivateBudget,
 } from "../types";
 
-type TabId = "auction" | "nominate" | "draft-board" | "chat" | "host-controls";
+type TabId =
+  | "auction"
+  | "nominate"
+  | "draft-board"
+  | "chat"
+  | "host-controls"
+  | "scores";
 
 /** Inner component that has access to messages for unread tracking */
 /** Inner component that has access to messages for unread tracking */
@@ -409,6 +419,19 @@ function RoomPageInner({ roomId }: { roomId: string }) {
   const meParticipant = participants.find(
     (p) => principal != null && p.userId.toText() === principal.toText(),
   );
+  // playerId -> display name for the authenticated participant's won players,
+  // used by the My Best Ball Team view to label lineup/bench slots.
+  const myPlayerNames: Record<string, string> = {};
+  if (meParticipant) {
+    for (const wp of meParticipant.wonPlayers) {
+      myPlayerNames[wp.playerId] = wp.playerName;
+    }
+  }
+  // principal text -> display name, used by the bracket view to label teams.
+  const participantNames: Record<string, string> = {};
+  for (const p of participants) {
+    participantNames[p.userId.toText()] = p.displayName;
+  }
   const myBudget = (() => {
     if (!meParticipant) return null;
     const priv = getPrivateBudget(meParticipant.budgetView);
@@ -428,6 +451,15 @@ function RoomPageInner({ roomId }: { roomId: string }) {
     ...roomView.activeNominations.map((n) => n.playerId),
     ...roomView.draftedPlayerIds,
   ]);
+
+  // Scores sub-tab availability — mirrors the previous per-tab gating so the
+  // consolidated Scores tab only appears when at least one view is available.
+  const showBestBallScores =
+    room.gameType === GameType.BestBall && isParticipant;
+  const showBracketScores =
+    room.competitionMode === CompetitionMode.HeadToHead &&
+    Number(room.playoffTeams) > 0;
+  const showScoresTab = showBestBallScores || showBracketScores;
 
   // Room bottom nav tabs
   const tabs: {
@@ -458,6 +490,16 @@ function RoomPageInner({ roomId }: { roomId: string }) {
       icon: <ClipboardList className="h-5 w-5" />,
       ocid: "room-nav-draft-board",
     },
+    ...(showScoresTab
+      ? [
+          {
+            id: "scores" as TabId,
+            label: "Scores",
+            icon: <Trophy className="h-5 w-5" />,
+            ocid: "room-nav-scores",
+          },
+        ]
+      : []),
     {
       id: "chat",
       label: "Chat",
@@ -716,6 +758,23 @@ function RoomPageInner({ roomId }: { roomId: string }) {
           </div>
         )}
 
+        {effectiveTab === "scores" && (
+          <div data-ocid="scores-tab-panel">
+            <ScoresTab
+              roomId={room.id}
+              participantId={principal}
+              playerNames={myPlayerNames}
+              rosterSettings={room.rosterSettings}
+              season={room.season}
+              playoffTeams={Number(room.playoffTeams)}
+              participantNames={participantNames}
+              showTeam={showBestBallScores}
+              showStandings={showBestBallScores}
+              showBracket={showBracketScores}
+            />
+          </div>
+        )}
+
         {effectiveTab === "chat" && (
           <div
             className="flex-1 min-h-0 h-full pb-16"
@@ -791,7 +850,7 @@ function RoomPageInner({ roomId }: { roomId: string }) {
 
       {/* ── Room bottom navigation ── */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-background/40 backdrop-blur-xl backdrop-saturate-150 border-t border-white/10 flex items-stretch"
+        className="fixed bottom-0 left-0 right-0 z-50 h-16 bg-background border-t border-white/10 flex items-stretch"
         data-ocid="room-bottom-nav"
         aria-label="Room navigation"
       >

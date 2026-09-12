@@ -16,7 +16,7 @@ export default {
     },
     extend: {
       colors: {
-        border: "oklch(var(--border))",
+        border: "oklch(var(--border) / <alpha-value>)",
         input: "oklch(var(--input))",
         ring: "oklch(var(--ring) / <alpha-value>)",
         background: "oklch(var(--background))",
@@ -32,6 +32,10 @@ export default {
         destructive: {
           DEFAULT: "oklch(var(--destructive) / <alpha-value>)",
           foreground: "oklch(var(--destructive-foreground))",
+        },
+        warning: {
+          DEFAULT: "oklch(var(--warning) / <alpha-value>)",
+          foreground: "oklch(var(--warning-foreground))",
         },
         muted: {
           DEFAULT: "oklch(var(--muted) / <alpha-value>)",
@@ -79,6 +83,11 @@ export default {
       },
       boxShadow: {
         xs: "0 1px 2px 0 rgba(0,0,0,0.05)",
+        subtle: "0 1px 3px 0 rgba(0,0,0,0.25), 0 1px 2px -1px rgba(0,0,0,0.2)",
+        elevated:
+          "0 4px 12px -2px rgba(0,0,0,0.4), 0 2px 6px -2px rgba(0,0,0,0.3)",
+        matchup:
+          "0 6px 18px -4px rgba(0,0,0,0.5), 0 2px 8px -2px rgba(0,0,0,0.35)",
       },
       keyframes: {
         "accordion-down": {

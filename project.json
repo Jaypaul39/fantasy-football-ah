@@ -1,15 +1,17 @@
 {
-  "overview": "A fantasy football auction house where users manage rooms, sync weekly player stats, and compute fantasy points from raw stats.",
+  "overview": "A fantasy football auction house where participants manage Best Ball teams, track weekly stats, and view league standings with automatic stat syncing.",
   "features": [
-    "Sync weekly NFL player stats",
-    "Compute fantasy points from raw stats for any scoring format",
-    "Query a player's weekly fantasy points"
+    "Manage your Best Ball team and weekly lineup",
+    "View league standings in cumulative or head-to-head formats",
+    "Automatic weekly stat syncing with participant-visible status",
+    "Track weekly player stats and season totals"
   ],
   "category": "fantasy-sports",
   "tags": [
     "fantasy-football",
+    "best-ball",
     "auction",
-    "scoring"
+    "sports"
   ],
-  "last_updated": "2026-08-22T03:03:23.247Z"
+  "last_updated": "2026-09-11T10:24:09.723Z"
 }

@@ -4,6 +4,14 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// backend.ts (which re-exports GameType) imports ExternalBlob from
+// @caffeineai/object-storage, whose dist/blob subpath does not resolve in the
+// jsdom test environment. Mock it so the enum value can be loaded.
+vi.mock("@caffeineai/object-storage", () => ({
+  ExternalBlob: class ExternalBlob {},
+}));
+
+import { CompetitionMode, GameType } from "../backend";
 import type { backendInterface } from "../backend.d.ts";
 import NominateTab from "../components/NominateTab";
 import type { AuctionState, RoomView, UserId } from "../types";
@@ -103,6 +111,9 @@ function buildRoomView(overrides: {
       scoringFormat: { __kind__: "halfPpr", halfPpr: null },
       season: BigInt(2026),
       startingBudget: BigInt(200),
+      gameType: GameType.Auction,
+      competitionMode: CompetitionMode.Cumulative,
+      playoffTeams: BigInt(0),
       state: "Active" as AuctionState,
       participants: [me, alice, bob],
       admin: me,

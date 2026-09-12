@@ -27,10 +27,16 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { SyncStatus } from "../backend";
 import { useBackend } from "../hooks/useBackend";
 import { parseCSVToADP, parseJSONToADP } from "../lib/adp-parser";
 import type { ADPIngestionResult } from "../lib/adp-types";
-import type { Player, RoomSummary, WeeklyPlayerStats } from "../types";
+import type {
+  Player,
+  RoomSummary,
+  SyncStatusRecord,
+  WeeklyPlayerStats,
+} from "../types";
 
 // ── Sleeper import types ───────────────────────────────────────────────────
 
@@ -74,6 +80,30 @@ function formatImportDate(tsMs: number): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+// Formats a backend nanosecond bigint timestamp as a human-readable date, or
+// "—" when the timestamp is missing/zero (the backend's "never" sentinel).
+function formatSyncTimestamp(ts: bigint | undefined | null): string {
+  if (ts == null || ts === 0n) return "—";
+  const date = new Date(Number(ts / 1_000_000n));
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// Formats a syncWeeklyStats rejection into a clear admin-facing message. The
+// backend rejects a resync of a settled/finalized week with a specific message
+// like 'Week 5 of 2024 is finalized and cannot be resynced'; we surface that
+// verbatim so the admin sees the exact reason instead of a generic error.
+function formatSyncError(err: unknown): string {
+  if (err instanceof Error && err.message) return err.message;
+  return "Unknown error occurred";
 }
 
 // ── Bye Weeks file parsers ─────────────────────────────────────────────────
@@ -387,6 +417,14 @@ function AdpSection({
 
 // ── Component ──────────────────────────────────────────────────────────────
 
+// Module-scoped in-session in-flight guard: a Set of "season:week" keys
+// currently being synced. It lives at module scope (not in a useRef) so it
+// survives a component remount within the same app session — a remount while a
+// sync is still in-flight must not start a second concurrent fetch for the
+// same (season, week). The backend's atomic guard remains the real correctness
+// guarantee; this is purely an optimization to avoid hammering Sleeper.
+const inFlightSyncKeys = new Set<string>();
+
 export default function AdminPanel() {
   const { actor } = useBackend();
 
@@ -445,6 +483,25 @@ export default function AdminPanel() {
   } | null>(null);
   const [skippedCount, setSkippedCount] = useState(0);
   const playerListRef = useRef<Record<string, SleeperPlayer> | null>(null);
+
+  // ── Weekly sync status view + auto-sync state ────────────────────────────
+  // Phase 10: surfaces the backend's per-(season, week) sync status records
+  // and, on admin session load, automatically runs the existing fetch+parse+
+  // submit flow once for each currently-flagged week. This is a visibility
+  // aid, NOT full autonomy: the backend's atomic guard is the real correctness
+  // guarantee, and this frontend guard only avoids hammering Sleeper with
+  // duplicate concurrent fetches for the same (season, week) within a session.
+  const [syncStatusRecords, setSyncStatusRecords] = useState<
+    SyncStatusRecord[]
+  >([]);
+  const [syncStatusLoading, setSyncStatusLoading] = useState(false);
+  const [syncStatusError, setSyncStatusError] = useState<string | null>(null);
+  // Guards the auto-sync so it only re-runs after a minimum interval has
+  // elapsed since the last run (~5 minutes). Unlike the previous one-shot
+  // guard, this lets the same auto-sync trigger safely run repeatedly while
+  // the Admin Panel stays open, without hammering Sleeper.
+  const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000;
+  const lastAutoSyncRef = useRef(0);
 
   // ── Clear players state ──────────────────────────────────────────────────
   const [clearConfirming, setClearConfirming] = useState(false);
@@ -1542,30 +1599,26 @@ export default function AdminPanel() {
     }
   };
 
-  // ── Weekly stats sync handler ────────────────────────────────────────────
-  // Fetches Sleeper's weekly stats map directly in the browser (same
-  // direct-fetch pattern as handleSleeperImport — no backend outcall), filters
-  // out team-defense keys and K/DST players by cross-referencing the cached
-  // player list, maps raw categories into WeeklyPlayerStats, then calls
-  // actor.syncWeeklyStats with the full batch.
-  const handleWeeklyStatsSync = async () => {
+  // ── Weekly stats sync core ───────────────────────────────────────────────
+  // Shared fetch+parse+submit flow used by BOTH the manual button and the
+  // automatic on-load sync. Fetches Sleeper's weekly stats map directly in the
+  // browser (same direct-fetch pattern as handleSleeperImport — no backend
+  // outcall), filters out team-defense keys and K/DST players by
+  // cross-referencing the cached player list, maps raw categories into
+  // WeeklyPlayerStats, then calls actor.syncWeeklyStats with the full batch.
+  //
+  // The in-session in-flight guard (module-scoped inFlightSyncKeys) ensures the
+  // same (season, week) is never fetched concurrently twice within this session
+  // — from a re-render, remount, or multiple tabs. This is purely an
+  // optimization to avoid hammering Sleeper; the backend's atomic guard is the
+  // real correctness guarantee. After the sync settles, the status view is
+  // refreshed so it reflects the new status (synced/empty/failed).
+  const runWeeklyStatsSync = async (seasonNum: number, weekNum: number) => {
     if (!actor) return;
-    const seasonNum = Number(season);
-    const weekNum = Number(week);
-    if (!Number.isInteger(seasonNum) || seasonNum <= 0) {
-      setSyncResult({
-        type: "error",
-        message: "Enter a valid season (e.g. 2024).",
-      });
-      return;
-    }
-    if (!Number.isInteger(weekNum) || weekNum < 1 || weekNum > 18) {
-      setSyncResult({
-        type: "error",
-        message: "Enter a valid week (1-18).",
-      });
-      return;
-    }
+    const key = `${seasonNum}:${weekNum}`;
+    // Skip if this (season, week) is already in-flight in this session.
+    if (inFlightSyncKeys.has(key)) return;
+    inFlightSyncKeys.add(key);
 
     setSyncing(true);
     setSyncResult(null);
@@ -1648,6 +1701,11 @@ export default function AdminPanel() {
       setSyncProgress({ synced: 0, total: batch.length });
 
       const res = await actor.syncWeeklyStats(
+        // The backend's syncWeeklyStats now takes a roomId. For the global
+        // admin the roomId is ignored for authorization (the admin is
+        // authorized unconditionally), so an empty string is a safe placeholder
+        // — the admin panel syncs global stats, not a specific room's.
+        "",
         BigInt(seasonNum),
         BigInt(weekNum),
         batch,
@@ -1659,13 +1717,151 @@ export default function AdminPanel() {
         type: "success",
         message: `${count.toLocaleString()} player stat records synced for ${seasonNum} week ${weekNum}.`,
       });
+      // Record the sync outcome. Base the empty-vs-synced decision on the
+      // backend's actual stored count (res.ok), not the pre-submission batch.
+      // The backend's atomic guard may reject a duplicate with #err 'Already
+      // synced' — that is not an application error, so ignore it silently.
+      const recordRes = await actor.recordSyncStatus(
+        BigInt(seasonNum),
+        BigInt(weekNum),
+        count > 0 ? SyncStatus.partial : SyncStatus.notYetAttempted,
+        null,
+        count > 0 ? BigInt(Date.now()) * 1_000_000n : null,
+      );
+      if (recordRes.__kind__ === "err" && recordRes.err !== "Already synced") {
+        throw new Error(recordRes.err);
+      }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Unknown error occurred";
+      // Surface the backend's specific rejection message (e.g. a finalized
+      // week) verbatim rather than a generic error string.
+      const msg = formatSyncError(err);
       setSyncResult({ type: "error", message: msg });
+      // Record the failure so the status view reflects it. Ignore the atomic
+      // guard's 'Already synced' rejection silently; a best-effort record
+      // failure must never mask the original sync error.
+      try {
+        const recordRes = await actor.recordSyncStatus(
+          BigInt(seasonNum),
+          BigInt(weekNum),
+          SyncStatus.notYetAttempted,
+          msg,
+          null,
+        );
+        if (
+          recordRes.__kind__ === "err" &&
+          recordRes.err !== "Already synced"
+        ) {
+          // Non-guard record failures are surfaced via the status refresh.
+        }
+      } catch {
+        // Best-effort status recording must never mask the original sync error.
+      }
     } finally {
+      inFlightSyncKeys.delete(key);
       setSyncing(false);
+      // Refresh the status view so it reflects the new status.
+      void fetchSyncStatusRecords();
     }
   };
+
+  // Manual weekly stats sync handler — validates the season/week inputs then
+  // delegates to the shared core flow.
+  const handleWeeklyStatsSync = async () => {
+    if (!actor) return;
+    const seasonNum = Number(season);
+    const weekNum = Number(week);
+    if (!Number.isInteger(seasonNum) || seasonNum <= 0) {
+      setSyncResult({
+        type: "error",
+        message: "Enter a valid season (e.g. 2024).",
+      });
+      return;
+    }
+    if (!Number.isInteger(weekNum) || weekNum < 1 || weekNum > 18) {
+      setSyncResult({
+        type: "error",
+        message: "Enter a valid week (1-18).",
+      });
+      return;
+    }
+    await runWeeklyStatsSync(seasonNum, weekNum);
+  };
+
+  // ── Sync status view ─────────────────────────────────────────────────────
+  // Loads the backend's per-(season, week) sync status records for the admin
+  // status list. This is a visibility aid only — it is NOT wired into any
+  // existing UI's sync-detection logic (the starters.length === 0 heuristic
+  // used by Phases 7-9 is untouched).
+  const fetchSyncStatusRecords = async () => {
+    if (!actor) return;
+    setSyncStatusLoading(true);
+    setSyncStatusError(null);
+    try {
+      const records = await actor.getSyncStatusRecords();
+      setSyncStatusRecords(records);
+    } catch (err: unknown) {
+      setSyncStatusError(
+        err instanceof Error ? err.message : "Failed to load sync status.",
+      );
+    } finally {
+      setSyncStatusLoading(false);
+    }
+  };
+
+  // ── Automatic sync on admin session load ─────────────────────────────────
+  // When the admin panel loads, fetch the currently-flagged (season, week)
+  // pairs and run the shared fetch+parse+submit flow for each. This is
+  // silent/automatic by default and re-runs at most once every ~5 minutes
+  // (minimum-time-since-last-sync interval) while the panel stays open — no
+  // uncontrolled polling or refetch loop. The in-flight guard prevents
+  // duplicate concurrent fetches for the same (season, week) from a re-render
+  // or remount. Documented as visibility, not full autonomy: the backend's
+  // atomic guard remains the real correctness guarantee.
+  const runAutoSync = async () => {
+    if (!actor) return;
+    const now = Date.now();
+    if (now - lastAutoSyncRef.current < AUTO_SYNC_INTERVAL_MS) return;
+    lastAutoSyncRef.current = now;
+    try {
+      const flagged = await actor.getFlaggedWeeks();
+      for (const record of flagged) {
+        const seasonNum = Number(record.season);
+        const weekNum = Number(record.week);
+        if (!Number.isInteger(seasonNum) || seasonNum <= 0) continue;
+        if (!Number.isInteger(weekNum) || weekNum < 1 || weekNum > 18) continue;
+        await runWeeklyStatsSync(seasonNum, weekNum);
+      }
+    } catch {
+      // silent — the status view still reflects whatever the backend reports
+    }
+  };
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runAutoSync intentionally omitted
+  useEffect(() => {
+    if (!actor) return;
+    void fetchSyncStatusRecords();
+    void runAutoSync();
+    const interval = window.setInterval(() => {
+      void runAutoSync();
+    }, AUTO_SYNC_INTERVAL_MS);
+    // Browsers throttle background-tab setInterval timers, so the 5-minute
+    // sync can fire late when the tab is backgrounded or the screen is locked.
+    // When the tab regains visibility, run the same overdue check immediately
+    // instead of waiting for the next (possibly clamped) interval tick.
+    // runAutoSync's own lastAutoSyncRef rate-limit guard still enforces the
+    // 5-minute minimum, so a visible tab never syncs more often than that.
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void runAutoSync();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actor]);
 
   const progressPct = progress
     ? Math.round((progress.imported / progress.total) * 100)
@@ -1992,6 +2188,165 @@ export default function AdminPanel() {
             </>
           )}
         </Button>
+      </div>
+
+      {/* ── Weekly Sync Status Card ─────────────────────────────────────── */}
+      {/* Minimal admin-facing status view: for each tracked (season, week),
+          show its status and the relevant timestamp — lastSuccessfulAt if
+          synced, lastAttemptedAt + lastError if failed, lastAttemptedAt if
+          empty/pending. This is a visibility aid, not full autonomy: it does
+          not drive any existing sync-detection logic. */}
+      <div
+        className="rounded-xl border border-border bg-card p-5 space-y-4"
+        data-ocid="admin-weekly-sync-status-section"
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg bg-accent/15 border border-accent/40 flex items-center justify-center shrink-0 mt-0.5">
+              <BarChart3 className="w-4 h-4 text-accent-foreground" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-foreground mb-1">
+                Weekly Sync Status
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Tracks the sync state of each (season, week). Flagged weeks are
+                synced automatically when this panel loads. This view is for
+                visibility only — it does not control any other feature.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fetchSyncStatusRecords}
+            disabled={syncStatusLoading || !actor}
+            className="text-muted-foreground hover:text-foreground shrink-0 text-xs h-7 px-2 mt-0.5"
+            data-ocid="admin-weekly-sync-status-refresh-btn"
+          >
+            {syncStatusLoading ? (
+              <div className="w-3 h-3 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
+            ) : (
+              <>
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Refresh
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Loading state */}
+        {syncStatusLoading && (
+          <div
+            className="flex items-center gap-2 p-3 rounded-lg bg-muted/40 border border-border text-sm text-muted-foreground"
+            data-ocid="admin-weekly-sync-status-loading_state"
+          >
+            <div className="w-3.5 h-3.5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin shrink-0" />
+            <span>Loading sync status…</span>
+          </div>
+        )}
+
+        {/* Error state */}
+        {!syncStatusLoading && syncStatusError && (
+          <div
+            className="flex items-start gap-2.5 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm"
+            data-ocid="admin-weekly-sync-status-error_state"
+          >
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <span className="break-all">{syncStatusError}</span>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!syncStatusLoading &&
+          !syncStatusError &&
+          syncStatusRecords.length === 0 && (
+            <div
+              className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 border border-border text-sm"
+              data-ocid="admin-weekly-sync-status-empty_state"
+            >
+              <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-foreground font-medium">
+                  No tracked weeks yet
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                  Sync a season/week above to start tracking its status.
+                </p>
+              </div>
+            </div>
+          )}
+
+        {/* Status list */}
+        {!syncStatusLoading &&
+          !syncStatusError &&
+          syncStatusRecords.length > 0 && (
+            <ul className="space-y-2" data-ocid="admin-weekly-sync-status-list">
+              {syncStatusRecords.map((record, i) => {
+                const status = record.status;
+                const isFinalized = status === "finalized";
+                const isPartial = status === "partial";
+                const isPending = status === "notYetAttempted";
+                const statusLabel = isFinalized
+                  ? "Finalized"
+                  : isPartial
+                    ? "Partial"
+                    : "Pending";
+                const statusTone = isFinalized
+                  ? "bg-green-500/10 border-green-500/30 text-green-400"
+                  : isPartial
+                    ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                    : "bg-muted/40 border-border text-muted-foreground";
+                return (
+                  <li
+                    key={`${record.season}-${record.week}`}
+                    className="flex items-start justify-between gap-3 p-3 rounded-lg bg-muted/30 border border-border"
+                    data-ocid={`admin-weekly-sync-status-item.${i + 1}`}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        Season{" "}
+                        <span className="font-mono">
+                          {Number(record.season)}
+                        </span>{" "}
+                        · Week{" "}
+                        <span className="font-mono">{Number(record.week)}</span>
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {isFinalized && (
+                          <>
+                            Finalized{" "}
+                            <span className="font-mono">
+                              {formatSyncTimestamp(record.lastSuccessfulAt)}
+                            </span>
+                          </>
+                        )}
+                        {(isPartial || isPending) && (
+                          <>
+                            Last attempted{" "}
+                            <span className="font-mono">
+                              {formatSyncTimestamp(record.lastAttemptedAt)}
+                            </span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold shrink-0 ${statusTone}`}
+                      data-ocid={`admin-weekly-sync-status-badge.${i + 1}`}
+                    >
+                      {isFinalized ? (
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      ) : (
+                        <Clock className="w-3.5 h-3.5" />
+                      )}
+                      {statusLabel}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
       </div>
 
       {/* ── Clear Players Card ──────────────────────────────────────────── */}

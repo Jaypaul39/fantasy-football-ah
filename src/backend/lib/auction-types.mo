@@ -6,6 +6,14 @@ import Text "mo:core/Text";
 // Domain logic for the Fantasy Football Auction platform.
 // Stateless functions — state is injected via parameters.
 module {
+  // ── Season constants ──────────────────────────────────────────────────────
+
+  /// The single authoritative season-end week for Best Ball. Every Best Ball
+  /// season runs from its `BestBallConfig.startWeek` through `FINAL_WEEK`
+  /// (inclusive). There is no stored end week anywhere — this constant is the
+  /// only source of truth for where a season ends.
+  public let FINAL_WEEK : Nat = 17;
+
   // ── Room helpers ──────────────────────────────────────────────────────────
 
   /// Default player filter — all positions, all player types
@@ -51,6 +59,9 @@ module {
     id : Types.RoomId,
     name : Text,
     admin : Types.UserId,
+    gameType : Types.GameType,
+    competitionMode : Types.CompetitionMode,
+    playoffTeams : Nat,
     startingBudget : Nat,
     settings : Types.AuctionSettings,
     createdAt : Types.Timestamp,
@@ -69,6 +80,9 @@ module {
       admin;
       participants = [admin];
       state = #Waiting;
+      gameType;
+      competitionMode;
+      playoffTeams;
       startingBudget;
       createdAt;
       settings;

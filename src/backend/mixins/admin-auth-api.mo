@@ -1,6 +1,7 @@
 import Types "../types/admin-auth";
 import AuctionTypes "../types/auction-types";
 import AdminAuthLib "../lib/admin-auth";
+import Int "mo:core/Int";
 import Map "mo:core/Map";
 import Result "mo:core/Result";
 import Text "mo:core/Text";

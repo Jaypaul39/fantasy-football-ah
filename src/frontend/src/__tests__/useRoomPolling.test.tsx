@@ -3,6 +3,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// backend.ts (which re-exports GameType) imports ExternalBlob from
+// @caffeineai/object-storage, whose dist/blob subpath does not resolve in the
+// jsdom test environment. Mock it so the enum value can be loaded.
+vi.mock("@caffeineai/object-storage", () => ({
+  ExternalBlob: class ExternalBlob {},
+}));
+
+import { CompetitionMode, GameType } from "../backend";
 import type { backendInterface } from "../backend.d.ts";
 import {
   useMyRooms,
@@ -65,6 +73,9 @@ function buildRoomView(roomId: string): RoomView {
       scoringFormat: { __kind__: "halfPpr", halfPpr: null },
       season: BigInt(2026),
       startingBudget: BigInt(200),
+      gameType: GameType.Auction,
+      competitionMode: CompetitionMode.Cumulative,
+      playoffTeams: BigInt(0),
       state: "Active" as AuctionState,
       participants: [me],
       admin: me,

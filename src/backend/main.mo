@@ -3,6 +3,20 @@ import AuctionMixin "mixins/auction-types-api";
 import ByeWeeksApi "mixins/bye-weeks-api";
 import AdminAuthTypes "types/admin-auth";
 import AdminAuthApi "mixins/admin-auth-api";
+import BestBallApi "mixins/best-ball-api";
+import H2HApi "mixins/h2h-api";
+import H2HBracketApi "mixins/h2h-bracket-api";
+import ApiDocMixin "mixins/api-doc";
+import LineupLib "lib/lineup";
+import SyncStatusApi "mixins/sync-status-api";
+import SyncStatusLib "lib/sync-status";
+import SyncStatusTypes "types/sync-status";
+import BestBallCachingApi "mixins/best-ball-caching-api";
+import BestBallCachingLib "lib/best-ball-caching";
+import BestBallCachingTypes "types/best-ball-caching";
+import Timer "mo:core/Timer";
+import Nat "mo:core/Nat";
+import Text "mo:core/Text";
 
 
 
@@ -115,6 +129,29 @@ actor {
   // Type-only declaration (M0250); initial value (empty Map) comes from the
   // migration chain.
   let weeklyPlayerStats : Map.Map<Text, Types.WeeklyPlayerStats>;
+
+  // syncStatuses: composite "season|week" Text key → SyncStatusRecord — one
+  // per-(season, week) sync status record for Best Ball weekly stats.
+  // Operational/diagnostic only: records whether a (season, week) has been
+  // synced, is empty (no data), failed, or not yet attempted. It is NOT wired
+  // into any existing UI's sync-detection logic and does NOT change the
+  // starters.length === 0 heuristic. The backend never fetches from Sleeper and
+  // never makes an HTTPS outcall — this is visibility, not full autonomy. The
+  // atomic duplicate-sync guard lives in recordSyncStatus (checked and set
+  // within the same call). Type-only declaration (M0250); initial value (empty
+  // Map) comes from the migration chain.
+  let syncStatuses : Map.Map<Text, SyncStatusTypes.SyncStatusRecord>;
+
+  // finalizedWeeklyScores: composite key → final optimal weekly-lineup total
+  // (Float) for a #finalized week. Keyed by roomId|season|week|principal. The
+  // permanent cache of each participant's final weekly score for weeks that
+  // have transitioned to #finalized. Written exactly once at finalization time
+  // (never recomputed or overwritten afterward); the single live (#partial)
+  // week is never cached. Seeded empty by the migration; populated at
+  // finalization and backfilled for pre-existing #synced→#finalized weeks by
+  // the daily timer after upgrade. Type-only declaration (M0250); initial value
+  // (empty Map) comes from the migration chain.
+  let finalizedWeeklyScores : BestBallCachingTypes.FinalizedWeeklyScores;
 
   // profiles: userId → UserProfile — global user identity store
   let profiles : Map.Map<Types.UserId, Types.UserProfile>;
@@ -285,11 +322,77 @@ actor {
     };
   };
 
-  include AuctionMixin(rooms, participants, nominations, nominationsByRoom, bids, proxyBids, nominatedByRoom, draftedPlayerIds, players, profiles, userRooms, nominationHistory, roomMessages, adminPrincipalStore, activeAdpDataset, nominationQueue, giphyApiKeyStore, oneSignalApiKeyStore, oneSignalPlayerIds, roomIdState, nextMsgIdState, nextNominationIdState, getOrCreateBids, getOrCreateProxyBids, getOrCreateNominationHistory, rssCacheContent, rssCacheTimestamp, rssFeedUrlsStore, rssRefreshIntervalSecs, lastRssFetchStatus, activeRoomIds, playerPriceHistory, notificationQueue, nextNotificationId, byeWeeksStore, notificationsQueuedTotal, notificationsProcessedTotal, notificationsSentTotal, notificationsExpiredTotal, notificationsRetriedTotal, notificationsFailedTotal, notificationWorkerEntryCount, lastNotificationWorkerStartedAt, lastNotificationWorkerCompletedAt, lastNotificationWorkerError, processingNotifications, bestBallConfigs, weeklyPlayerStats);
+  include AuctionMixin(rooms, participants, nominations, nominationsByRoom, bids, proxyBids, nominatedByRoom, draftedPlayerIds, players, profiles, userRooms, nominationHistory, roomMessages, adminPrincipalStore, activeAdpDataset, nominationQueue, giphyApiKeyStore, oneSignalApiKeyStore, oneSignalPlayerIds, roomIdState, nextMsgIdState, nextNominationIdState, getOrCreateBids, getOrCreateProxyBids, getOrCreateNominationHistory, rssCacheContent, rssCacheTimestamp, rssFeedUrlsStore, rssRefreshIntervalSecs, lastRssFetchStatus, activeRoomIds, playerPriceHistory, notificationQueue, nextNotificationId, byeWeeksStore, notificationsQueuedTotal, notificationsProcessedTotal, notificationsSentTotal, notificationsExpiredTotal, notificationsRetriedTotal, notificationsFailedTotal, notificationWorkerEntryCount, lastNotificationWorkerStartedAt, lastNotificationWorkerCompletedAt, lastNotificationWorkerError, processingNotifications, bestBallConfigs, weeklyPlayerStats, syncStatuses, func(season : Nat, week : Nat) : Nat {
+    BestBallCachingLib.finalizePriorPartialWeeks(rooms, participants, bestBallConfigs, syncStatuses, finalizedWeeklyScores, calculateOptimalWeeklyLineup, season, week);
+  });
 
   include ByeWeeksApi(byeWeeksStore, players, adminPrincipalStore);
 
   include AdminAuthApi(adminPrincipalStore, recoveryPasswordHash, recoveryAttempts);
+
+  // ── Internal weekly lineup calculator (Phase 3) ───────────────────────────
+  // Internal (non-public) helper that wires the pure lineup optimizer in
+  // lib/lineup.mo to the weeklyPlayerStats map. Not exposed as a public method
+  // in this phase; Phase 4's getWeeklyLineup/getStandings will call it. It
+  // reads only — it never mutates wonPlayers, rosterSettings, WeeklyPlayerStats,
+  // or any persistent auction data.
+  func calculateOptimalWeeklyLineup(
+    room : Types.Room,
+    participant : Types.Participant,
+    week : Nat,
+  ) : LineupLib.LineupResult {
+    LineupLib.calculateOptimalWeeklyLineup(
+      room,
+      participant,
+      week,
+      func(playerId : Text, season : Nat, week : Nat) : ?Types.WeeklyPlayerStats {
+        weeklyPlayerStats.get(playerId # "|" # season.toText() # "|" # week.toText());
+      },
+    );
+  };
+
+  // ── Best Ball weekly lineup + standings read APIs (Phase 4) ───────────────
+  // Read-only queries that consume the Phase 3 calculator above as the single
+  // source of truth. The calculator func is injected so the mixin never
+  // duplicates lineup optimization or scoring logic.
+  include BestBallApi(rooms, participants, bestBallConfigs, syncStatuses, finalizedWeeklyScores, calculateOptimalWeeklyLineup);
+
+  // ── Head-to-Head regular-season standings (Phase 12a) ─────────────────────
+  // Read-only query that resolves each team's weekly H2H result via the derived
+  // round-robin schedule (lib/h2h.mo) and the Phase 3 optimal-lineup calculator
+  // as the single source of truth. No new stable storage — the schedule is
+  // derived on demand from immutable room inputs.
+  include H2HApi(rooms, participants, bestBallConfigs, syncStatuses, finalizedWeeklyScores, calculateOptimalWeeklyLineup);
+
+  // ── Head-to-Head playoff bracket resolution (Phase 12b) ───────────────────
+  // Read-only query that derives the fixed-slot playoff bracket for a
+  // #HeadToHead room with playoffTeams > 0, resolving each game's slots
+  // recursively from the regular-season standings ordering and the Phase 3
+  // optimal-lineup calculator as the single source of truth. No new stable
+  // storage — the bracket, every game, and the champion are pure computations
+  // over already-persisted data.
+  include H2HBracketApi(rooms, participants, bestBallConfigs, syncStatuses, finalizedWeeklyScores, calculateOptimalWeeklyLineup, getH2HStandings);
+
+  // ── Weekly sync status (Phase 10) ─────────────────────────────────────────
+  // Per-(season, week) sync status tracking for Best Ball weekly stats.
+  // Operational/diagnostic only — records what is missing so the admin panel
+  // can show it and the frontend can auto-sync flagged weeks. The backend never
+  // fetches from Sleeper and never makes an HTTPS outcall; the actual
+  // fetch+parse+submit happens in an authenticated admin's browser session.
+  // This is visibility, not full autonomy.
+  include SyncStatusApi(syncStatuses, rooms, bestBallConfigs, participants, finalizedWeeklyScores, calculateOptimalWeeklyLineup, adminPrincipalStore);
+
+  // ── Best Ball caching + automatic finalization (Phase: caching) ──────────
+  // Host/admin recovery endpoints for the finalized-weekly-score cache and the
+  // automatic finalization lifecycle. Normal operation is fully automatic —
+  // finalization is triggered by the synchronization flow (syncWeeklyStats →
+  // finalizePriorPartialWeeks) and the daily timer as a backstop; the public
+  // methods here exist ONLY as recovery mechanisms.
+  include BestBallCachingApi(rooms, participants, bestBallConfigs, syncStatuses, finalizedWeeklyScores, calculateOptimalWeeklyLineup, adminPrincipalStore);
+
+  // ── Behavioral API documentation ─────────────────────────────────────────
+  // Exposes getApiDoc, a static Markdown document describing the public API.
+  include ApiDocMixin();
 
   // ── OQL Data Intelligence exposure ────────────────────────────────────────
   // Exposes every primary persisted collection as a queryable entity via the
@@ -312,6 +415,9 @@ actor {
   func auctionStateText(s : Types.AuctionState) : Text {
     switch s { case (#Waiting) "Waiting"; case (#Active) "Active"; case (#Paused) "Paused"; case (#Completed) "Completed" }
   };
+  func competitionModeText(m : Types.CompetitionMode) : Text {
+    switch m { case (#Cumulative) "Cumulative"; case (#HeadToHead) "HeadToHead" }
+  };
   func nominationStateText(s : Types.NominationState) : Text {
     switch s { case (#Active) "Active"; case (#Closed) "Closed"; case (#Expired) "Expired" }
   };
@@ -325,6 +431,13 @@ actor {
       case (#halfPpr) "halfPpr";
       case (#ppr) "ppr";
       case (#custom(_)) "custom";
+    }
+  };
+  func syncStatusText(s : SyncStatusTypes.SyncStatus) : Text {
+    switch s {
+      case (#notYetAttempted) "notYetAttempted";
+      case (#partial) "partial";
+      case (#finalized) "finalized";
     }
   };
 
@@ -389,7 +502,21 @@ actor {
   type BestBallConfigRow = {
     roomId : Types.RoomId;
     startWeek : Nat;
-    endWeek : Nat;
+  };
+  type SyncStatusRow = {
+    season : Nat;
+    week : Nat;
+    lastAttemptedAt : Int;
+    status : Text;
+    lastError : Text;
+    lastSuccessfulAt : Int;
+  };
+  type FinalizedScoreRow = {
+    roomId : Types.RoomId;
+    season : Nat;
+    week : Nat;
+    principal : Types.UserId;
+    score : Float;
   };
 
   // Flattened iterators over nested maps/lists.
@@ -518,7 +645,38 @@ actor {
         {
           roomId;
           startWeek = cfg.startWeek;
-          endWeek = cfg.endWeek;
+        }
+      }
+    )
+  };
+  func syncStatusRows() : Iter.Iter<SyncStatusRow> {
+    syncStatuses.entries().map(
+      func((_key, r)) {
+        {
+          season = r.season;
+          week = r.week;
+          lastAttemptedAt = r.lastAttemptedAt;
+          status = syncStatusText(r.status);
+          lastError = optText(r.lastError);
+          lastSuccessfulAt = optInt(r.lastSuccessfulAt);
+        }
+      }
+    )
+  };
+  func finalizedScoreRows() : Iter.Iter<FinalizedScoreRow> {
+    finalizedWeeklyScores.entries().map(
+      func((key, score)) {
+        // Composite key format (see lib/best-ball-caching.finalizedScoreKey):
+        //   roomId # "|" # season.toText() # "|" # week.toText() # "|" # principal.toText()
+        // Split on "|" to recover the four components. Keys are always produced
+        // by the backend's own finalizedScoreKey, so the split is well-formed.
+        let parts = key.split(#text "|").toArray();
+        {
+          roomId = parts[0];
+          season = Nat.fromText(parts[1]) ?? 0;
+          week = Nat.fromText(parts[2]) ?? 0;
+          principal = Principal.fromText(parts[3]);
+          score;
         }
       }
     )
@@ -548,6 +706,8 @@ actor {
         .payload("leagueFormat", func r = optText(r.leagueFormat))
         .payload("season", func r = r.season)
         .payload("scoringFormat", func r = scoringFormatText(r.scoringFormat))
+        .payload("competitionMode", func r = competitionModeText(r.competitionMode))
+        .payload("playoffTeams", func r = r.playoffTeams)
         .payload("settingsNomTimerSecs", func r = r.settings.nomTimerSecs)
         .payload("settingsBidTimerSecs", func r = r.settings.bidTimerSecs)
         .payload("settingsMinBidIncrement", func r = r.settings.minBidIncrement)
@@ -558,7 +718,7 @@ actor {
         .payload("playerFilterType", func r = r.playerFilter.filterType)
         .payload("playerFilterPositionsCount", func r = r.playerFilter.positions.size())
         .sample({
-          id = ""; name = ""; admin = anyP; state = #Waiting; startingBudget = 0;
+          id = ""; name = ""; admin = anyP; state = #Waiting; gameType = #Auction; competitionMode = #Cumulative; playoffTeams = 0; startingBudget = 0;
           createdAt = 0; nominatorIndex = 0; nominationTurnStartedAt = 0;
           isPublic = true; password = null; participants = []; settings = {
             nomTimerSecs = 0; bidTimerSecs = 0; minBidIncrement = 0;
@@ -716,8 +876,7 @@ actor {
       OQL.Entity.manual<BestBallConfigRow>("bestBallConfig", bestBallConfigRows, "BestBallConfigRow", "roomId")
         .payload("roomId", func r = r.roomId)
         .payload("startWeek", func r = r.startWeek)
-        .payload("endWeek", func r = r.endWeek)
-        .sample({ roomId = ""; startWeek = 0; endWeek = 0 })
+        .sample({ roomId = ""; startWeek = 0 })
         .controllerOnly()
         .build(),
 
@@ -750,8 +909,82 @@ actor {
         })
         .controllerOnly()
         .build(),
+
+      // syncStatus — top-level map (composite "season|week" Text key →
+      // SyncStatusRecord), controllerOnly. Operational/diagnostic per-(season,
+      // week) sync status for Best Ball weekly stats. The composite key is the
+      // map key, not a field, so season/week are exposed as payload columns.
+      // The status variant is collapsed to a Text tag and the option fields
+      // (lastError, lastSuccessfulAt) use sentinel conversions so every column
+      // is a stable primitive. Admin-only diagnostic data, matching the
+      // controllerOnly convention of the other operational tables.
+      OQL.Entity.manual<SyncStatusRow>("syncStatus", syncStatusRows, "SyncStatusRow", "season")
+        .payload("season", func r = r.season)
+        .payload("week", func r = r.week)
+        .payload("lastAttemptedAt", func r = r.lastAttemptedAt)
+        .payload("status", func r = r.status)
+        .payload("lastError", func r = r.lastError)
+        .payload("lastSuccessfulAt", func r = r.lastSuccessfulAt)
+        .sample({ season = 0; week = 0; lastAttemptedAt = 0; status = "notYetAttempted"; lastError = ""; lastSuccessfulAt = 0 })
+        .controllerOnly()
+        .build(),
+
+      // finalizedWeeklyScore — flattened from the finalizedWeeklyScores map
+      // (composite Text key → Float), controllerOnly. The permanent cache of
+      // each participant's final optimal weekly-lineup total for #finalized
+      // weeks. The composite key (roomId|season|week|principal) is the map key,
+      // not a field, so the four components are recovered by splitting the key
+      // and exposed as payload columns alongside the cached `score` (Float).
+      // Room-scoped data, matching the controllerOnly convention of the other
+      // room-scoped tables (participant, bid, bestBallConfig, …).
+      OQL.Entity.manual<FinalizedScoreRow>("finalizedWeeklyScore", finalizedScoreRows, "FinalizedScoreRow", "roomId")
+        .payload("roomId", func r = r.roomId)
+        .payload("season", func r = r.season)
+        .payload("week", func r = r.week)
+        .payload("principal", func r = r.principal)
+        .payload("score", func r = r.score)
+        .sample({ roomId = ""; season = 0; week = 0; principal = anyP; score = 0.0 })
+        .controllerOnly()
+        .build(),
     ];
   });
+
+  // ── Weekly sync-status daily timer (Phase 10) ─────────────────────────────
+  // Once-per-day job: compute the deduplicated (season, week) set across all
+  // #BestBall rooms' startWeek..endWeek ranges, then for each pair ensure a
+  // status record exists and is marked as needing attention (anything not
+  // #synced). It never fetches from Sleeper and never makes an HTTPS outcall —
+  // this is visibility, not full autonomy. The recurring timer is NOT persisted
+  // across canister upgrades (mo:core/Timer), so it is re-registered in the
+  // postupgrade hook below.
+  func runDailySyncCheck() : async () {
+    let pairs = SyncStatusLib.computeDedupSeasonWeeks(rooms, bestBallConfigs);
+    // Backstop: re-enforce the finalization invariant — at most one live
+    // (#partial) week per season. For each season, finalize every #partial week
+    // below the live week (the highest #partial week, or startWeek if none).
+    // This is the same rule the sync flow enforces, applied here as a safety
+    // net so a completed-but-unfinalized week can never accumulate.
+    let bySeason = Map.empty<Nat, List.List<Nat>>();
+    for ((season, week) in pairs.values()) {
+      switch (bySeason.get(season)) {
+        case (?weeks) weeks.add(week);
+        case null {
+          let weeks = List.empty<Nat>();
+          weeks.add(week);
+          bySeason.add(season, weeks);
+        };
+      };
+    };
+    bySeason.forEach(func(season, weeks) {
+      let live = SyncStatusLib.liveWeekForSeason(syncStatuses, season, weeks.toArray());
+      ignore BestBallCachingLib.finalizePriorPartialWeeks(rooms, participants, bestBallConfigs, syncStatuses, finalizedWeeklyScores, calculateOptimalWeeklyLineup, season, live);
+    });
+    // Post-migration backfill: populate the cache for pre-existing #finalized
+    // weeks lacking entries. Idempotent — never overwrites existing entries.
+    ignore BestBallCachingLib.backfillFinalizedScores(rooms, participants, bestBallConfigs, syncStatuses, finalizedWeeklyScores, calculateOptimalWeeklyLineup);
+    // Flag the live week for partial sync.
+    ignore SyncStatusLib.flagNeedingAttention(syncStatuses, pairs);
+  };
 
   /// One-time membership index repair on upgrade (Fix 2).
   /// Rebuilds the entire userRooms index from the authoritative room.participants
@@ -882,6 +1115,16 @@ actor {
         };
       };
     });
+
+    // Phase 10: Re-register the once-per-day weekly sync-status timer.
+    // mo:core/Timer timers are NOT persisted across canister upgrades, so a
+    // recurring timer must be re-registered in a post-upgrade hook. This is a
+    // non-async postupgrade (M0127); Timer.recurringTimer<system> carries the
+    // <system> capability and can be called here directly. The timer job
+    // (runDailySyncCheck) only computes which (season, week) pairs need
+    // attention and maintains the status record — it never fetches from Sleeper
+    // and never makes an HTTPS outcall.
+    ignore Timer.recurringTimer<system>(#seconds(86400), runDailySyncCheck);
   };
 
   public query func getCycleBalance() : async Nat {

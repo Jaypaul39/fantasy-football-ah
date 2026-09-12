@@ -69,11 +69,31 @@ export interface TransformationOutput {
     body: Uint8Array;
     headers: Array<HttpHeader>;
 }
+export interface StandingsEntry {
+    displayName: string;
+    participantId: UserId;
+    totalPoints: number;
+}
+export interface ResolvedContestant {
+    seed: bigint;
+    score: number;
+    participant: UserId;
+}
 export interface HttpRequestResult {
     status: bigint;
     body: Uint8Array;
     headers: Array<HttpHeader>;
 }
+export type BracketSlotState = {
+    __kind__: "resolved";
+    resolved: ResolvedContestant;
+} | {
+    __kind__: "pendingOnDependency";
+    pendingOnDependency: null;
+} | {
+    __kind__: "pendingOnSync";
+    pendingOnSync: null;
+};
 export interface Result__1 {
     hasMore: boolean;
     rows: Array<Array<Cell>>;
@@ -95,11 +115,14 @@ export interface Room {
     teamCount?: bigint;
     season: bigint;
     nominationTurnPausedAt?: Timestamp;
+    playoffTeams: bigint;
     playerFilter: PlayerFilter;
     state: AuctionState;
     paidParticipants: Array<UserId>;
     settings: AuctionSettings;
+    gameType: GameType;
     isPublic: boolean;
+    competitionMode: CompetitionMode;
     nominationTurnStartedAt: Timestamp;
 }
 export type ScoringFormat = {
@@ -134,6 +157,12 @@ export interface WeeklyPlayerStats {
     recTds: bigint;
     recYds: bigint;
 }
+export interface PlayoffGameResult {
+    status: GameStatus;
+    away: BracketSlotState;
+    game: PlayoffGame;
+    home: BracketSlotState;
+}
 export interface ParticipantView {
     displayName: string;
     userId: UserId;
@@ -157,15 +186,21 @@ export interface NominationView {
     roomId: RoomId;
     position: string;
 }
+export interface PlayoffGame {
+    away: BracketSlot;
+    home: BracketSlot;
+    week: bigint;
+}
 export type NominationId = bigint;
-export interface BidHistoryEvent {
-    displayName: string;
-    userId: UserId;
-    isAutoBid?: boolean;
-    timestamp: Timestamp;
-    playerName: string;
-    amount: bigint;
-    eventType: BidHistoryEventType;
+export interface LineupSlot {
+    playerId?: string;
+    slot: string;
+    position: string;
+    points: number;
+}
+export interface LineupBenchEntry {
+    playerId: string;
+    points: number;
 }
 export interface TransformationInput {
     context: Uint8Array;
@@ -175,6 +210,26 @@ export interface ProxyBid {
     userId: UserId;
     maxBid: bigint;
     nominationId: NominationId;
+}
+export type GameStatus = {
+    __kind__: "resolved";
+    resolved: {
+        winner: UserId;
+        homeScore: number;
+        awayScore: number;
+    };
+} | {
+    __kind__: "pendingOnDependency";
+    pendingOnDependency: null;
+} | {
+    __kind__: "pendingOnSync";
+    pendingOnSync: null;
+};
+export interface PrivateParticipantBudget {
+    availableBudget: bigint;
+    committedBudget: bigint;
+    totalBudget: bigint;
+    spentBudget: bigint;
 }
 export interface CustomScoringSettings {
     recTdPoints: number;
@@ -188,12 +243,6 @@ export interface CustomScoringSettings {
     passTdPoints: number;
     receptionPoints: number;
 }
-export interface PrivateParticipantBudget {
-    availableBudget: bigint;
-    committedBudget: bigint;
-    totalBudget: bigint;
-    spentBudget: bigint;
-}
 export interface ChatMessage {
     id: bigint;
     displayName: string;
@@ -201,10 +250,6 @@ export interface ChatMessage {
     message: string;
     timestamp: Timestamp;
     reactions: Array<[string, Array<UserId>]>;
-}
-export interface Cell {
-    value: Value;
-    name: string;
 }
 export type Value = {
     __kind__: "int";
@@ -225,28 +270,65 @@ export type Value = {
     __kind__: "text";
     text: string;
 };
-export interface BestBallConfig {
-    startWeek: bigint;
-    endWeek: bigint;
+export interface SyncStatusRecord {
+    status: SyncStatus;
+    lastAttemptedAt: bigint;
+    week: bigint;
+    season: bigint;
+    lastError?: string;
+    lastSuccessfulAt?: bigint;
+}
+export interface H2HStandingEntry {
+    displayName: string;
+    gamesPlayed: bigint;
+    pointsFor: number;
+    ties: bigint;
+    wins: bigint;
+    losses: bigint;
+    participant: UserId;
+}
+export interface Cell {
+    value: Value;
+    name: string;
 }
 export interface PublicParticipantBudget {
     publicAvailableBudget: bigint;
     totalBudget: bigint;
     spentBudget: bigint;
 }
+export interface PlayoffBracketResult {
+    games: Array<PlayoffGameResult>;
+    champion: {
+        __kind__: "some";
+        some: ResolvedContestant;
+    } | {
+        __kind__: "inProgress";
+        inProgress: null;
+    };
+}
+export type BracketSlot = {
+    __kind__: "WinnerOf";
+    WinnerOf: bigint;
+} | {
+    __kind__: "Seed";
+    Seed: bigint;
+};
+export interface BestBallConfig {
+    startWeek: bigint;
+}
 export interface ADPDataset {
     lastUpdated: bigint;
     importedAt: bigint;
     entries: Array<AdpEntry>;
 }
-export interface AuctionSettings {
-    minBidIncrement: bigint;
-    maxActivePicks: bigint;
-    adpDataset: string;
-    nomTimerSecs: bigint;
-    maxParticipants: bigint;
-    bidTimerSecs: bigint;
-    maxRosterSize?: bigint;
+export interface BidHistoryEvent {
+    displayName: string;
+    userId: UserId;
+    isAutoBid?: boolean;
+    timestamp: Timestamp;
+    playerName: string;
+    amount: bigint;
+    eventType: BidHistoryEventType;
 }
 export interface WonPlayer {
     playerId: string;
@@ -257,6 +339,15 @@ export interface WonPlayer {
     nominatedBy: UserId;
     position: string;
     winningBid: bigint;
+}
+export interface AuctionSettings {
+    minBidIncrement: bigint;
+    maxActivePicks: bigint;
+    adpDataset: string;
+    nomTimerSecs: bigint;
+    maxParticipants: bigint;
+    bidTimerSecs: bigint;
+    maxRosterSize?: bigint;
 }
 export interface HttpHeader {
     value: string;
@@ -277,6 +368,15 @@ export type Result = {
     __kind__: "err";
     err: string;
 };
+export interface WeeklyLineupView {
+    total: number;
+    displayName: string;
+    starters: Array<LineupSlot>;
+    week: bigint;
+    participantId: UserId;
+    bench: Array<LineupBenchEntry>;
+    roomId: RoomId;
+}
 export interface RoomSummary {
     id: RoomId;
     name: string;
@@ -305,6 +405,13 @@ export interface AdpEntry {
     team?: string;
     position?: string;
 }
+export type FinalizeResult = {
+    __kind__: "ok";
+    ok: bigint;
+} | {
+    __kind__: "err";
+    err: string;
+};
 export interface UserProfile {
     displayName: string;
     userId: UserId;
@@ -332,12 +439,32 @@ export enum BidHistoryEventType {
     leaderChanged = "leaderChanged",
     nominationCreated = "nominationCreated"
 }
+export enum CompetitionMode {
+    Cumulative = "Cumulative",
+    HeadToHead = "HeadToHead"
+}
+export enum GameType {
+    BestBall = "BestBall",
+    Guillotine = "Guillotine",
+    Auction = "Auction"
+}
 export enum NominationState {
     Closed = "Closed",
     Active = "Active",
     Expired = "Expired"
 }
+export enum SyncStatus {
+    finalized = "finalized",
+    notYetAttempted = "notYetAttempted",
+    partial = "partial"
+}
 export interface backendInterface {
+    /**
+     * / Admin-only — manually drain the notification queue now.
+     * / Thin wrapper around processNotificationQueue; does not modify that function's
+     * / signature, auth, or the timer's unguarded call to it.
+     * / Returns #ok with the number of notifications processed, or #err "Unauthorized".
+     */
     adminDrainQueueNow(): Promise<{
         __kind__: "ok";
         ok: bigint;
@@ -345,8 +472,26 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Host-only recovery: populate the cache for every #finalized week lacking a
+     * / cache entry (the post-migration population for pre-existing #synced→
+     * / #finalized weeks). Idempotent — only fills missing entries, never
+     * / overwrites. Returns the number of scores written.
+     */
+    backfillFinalizedScores(): Promise<bigint>;
+    /**
+     * / Query: returns true if the caller is the registered global admin principal.
+     * / Used by the frontend to show/hide the Admin section in the sidebar.
+     */
     checkIsAdmin(): Promise<boolean>;
+    /**
+     * / Clear the caller's queued nomination for the given room.
+     */
     clearNominationQueue(roomId: RoomId): Promise<void>;
+    /**
+     * / Admin-only: clear all players from the players map.
+     * / Returns #ok(()) on success or #err if caller is not admin.
+     */
     clearPlayers(): Promise<{
         __kind__: "ok";
         ok: null;
@@ -354,13 +499,30 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
-    createRoom(name: string, startingBudget: bigint, settings: AuctionSettings, isPublic: boolean, password: string | null, playerFilter: PlayerFilter | null, maxRosterSize: bigint | null, rosterSettings: RosterSettings | null, teamCount: bigint | null, leagueFormat: string | null, season: bigint, scoringFormat: ScoringFormat): Promise<{
+    /**
+     * / Admin-only: compute the deduplicated set of (season, week) pairs across
+     * / all #BestBall rooms' startWeek..FINAL_WEEK ranges. Unions overlapping ranges
+     * / across different rooms on the same season. Used by the frontend to know
+     * / which weeks exist to sync, and by the daily timer.
+     */
+    computeDedupSeasonWeeks(): Promise<Array<[bigint, bigint]>>;
+    createRoom(gameType: GameType, competitionMode: CompetitionMode, playoffTeams: bigint, name: string, startingBudget: bigint, settings: AuctionSettings, isPublic: boolean, password: string | null, playerFilter: PlayerFilter | null, maxRosterSize: bigint | null, rosterSettings: RosterSettings | null, teamCount: bigint | null, leagueFormat: string | null, season: bigint, scoringFormat: ScoringFormat): Promise<{
         __kind__: "ok";
         ok: RoomId;
     } | {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only: delete a room and ALL associated data.
+     * / Removes the room from: rooms, participants, nominations, bids, proxyBids,
+     * / nominatedByRoom, nominationHistory, and roomMessages.
+     * / Returns #ok(()) on success or #err("Room not found") if the room does not exist.
+     * /
+     * / Best Ball protection: if a BestBallConfig exists for this room, deletion
+     * / is refused — the room contains historical Best Ball data — and no removal
+     * / logic runs at all.
+     */
     deleteRoom(roomId: RoomId): Promise<{
         __kind__: "ok";
         ok: null;
@@ -368,6 +530,10 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Host-only: edit the total budget of a participant.
+     * / newBudget must be >= spentBudget (cannot set below already-spent amount).
+     */
     editParticipantBudget(roomId: RoomId, targetUser: UserId, newBudget: bigint): Promise<{
         __kind__: "ok";
         ok: null;
@@ -375,7 +541,23 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
-    endAuction(roomId: RoomId): Promise<{
+    /**
+     * / Admin-only: transition room to Completed.
+     * /
+     * / `startWeek` is optional and its meaning depends on the room's gameType:
+     * /   - #Auction: startWeek must be null. A provided value is rejected with
+     * /     #err (never silently ignored).
+     * /   - #BestBall: startWeek is required and must satisfy 1 <= startWeek <=
+     * /     FINAL_WEEK (17). On success the BestBallConfig { startWeek } is
+     * /     written atomically with the completion.
+     * /   - #Guillotine: rejected — no lifecycle support in this build.
+     * /
+     * / Atomicity: all validation happens before any state mutation. If any check
+     * / fails, the entire call is rejected and the room is left in its prior
+     * / (pre-completion) state — no partial completion, no room stuck #Completed
+     * / with a missing/invalid Best Ball config.
+     */
+    endAuction(roomId: RoomId, startWeek: bigint | null): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -384,25 +566,132 @@ export interface backendInterface {
     }>;
     execute(qJson: string): Promise<Result__1>;
     fetchRssFeeds(): Promise<string>;
+    /**
+     * / Host-only recovery: manually finalize a (season, week) and write its
+     * / cache. Only a #partial week may be finalized; a #finalized week is refused
+     * / (idempotent). This is a recovery mechanism only — normal operation never
+     * / depends on it.
+     */
+    finalizeWeek(season: bigint, week: bigint): Promise<FinalizeResult>;
+    /**
+     * / Return the current active ADP dataset, or null if none has been imported.
+     * / Returns "all" dataset for backwards compatibility.
+     */
     getADPDataset(): Promise<ADPDataset | null>;
+    /**
+     * / Return the ADP dataset for a specific type ("all" or "rookies").
+     * / Returns null if no dataset has been imported for that type.
+     */
     getADPDatasetByType(datasetType: string): Promise<ADPDataset | null>;
+    /**
+     * / Alias for getADPDataset — returns the "all" ADP dataset with lastUpdated timestamp.
+     */
     getActiveADPDataset(): Promise<ADPDataset | null>;
+    /**
+     * / Return a Markdown document describing the backend's public API.
+     */
+    getApiDoc(): Promise<string>;
+    /**
+     * / Any room participant can read the room's BestBallConfig.
+     * / Returns null when the room has no Best Ball tracking enabled.
+     * / The config carries only `startWeek`; the season always ends at the
+     * / module-level `FINAL_WEEK` constant (17).
+     */
     getBestBallConfig(roomId: RoomId): Promise<BestBallConfig | null>;
+    /**
+     * / Public query: return the current bye week mapping as an array of
+     * / (team, byeWeek) pairs. Not sensitive — bye weeks are public NFL schedule
+     * / data. Returns the default 2025 mapping if no admin import has occurred.
+     */
     getByeWeeks(): Promise<Array<[string, bigint]>>;
     getCycleBalance(): Promise<bigint>;
+    /**
+     * / Return the persisted display name for a given user principal, or null if not set.
+     * / Public query — callable by any authenticated user.
+     */
     getDisplayName(userId: UserId): Promise<string | null>;
+    /**
+     * / Admin-only: get the flagged (needing-attention) weeks — only the weeks
+     * / eligible for a partial sync: the current live week per season (the highest
+     * / #partial week, or the first non-finalized week if none) when it is #partial
+     * / or #notYetAttempted. Excludes #finalized weeks and #notYetAttempted future
+     * / weeks. The frontend runs its existing fetch+parse+submit flow for each
+     * / flagged week on admin session load.
+     * /
+     * / This is an update (not a query) because it also ensures a status record
+     * / exists for the live week (creating a #notYetAttempted record when none
+     * / exists yet), so newly-created Best Ball rooms are flagged even before the
+     * / once-per-day timer runs.
+     * /
+     * / It also triggers the post-migration cache backfill for pre-existing
+     * / #finalized weeks, so those weeks show their correct cached score in
+     * / getStandings promptly (on admin session load) rather than waiting up to
+     * / 24h for the daily timer. The backfill is idempotent — it only fills missing
+     * / entries and never overwrites existing ones.
+     */
+    getFlaggedWeeks(): Promise<Array<SyncStatusRecord>>;
+    /**
+     * / Public query — retrieve the Giphy API key.
+     * / Callable by any authenticated (non-anonymous) user.
+     * / Returns null if no key is stored. Never exposed to anonymous callers.
+     */
     getGiphyApiKey(): Promise<string | null>;
+    /**
+     * / Compute Head-to-Head regular-season standings for a room.
+     * /
+     * / Rejects with #err if the room is not #BestBall + #HeadToHead, is not found,
+     * / or the caller is not a participant. Each team's weekly result is resolved
+     * / via the derived pairing table for weeks in startWeek..regularSeasonEnd;
+     * / unsynced weeks produce no result (not counted in gamesPlayed), and genuine
+     * / ties are allowed with no synthetic tiebreaker. Playoff weeks are out of
+     * / scope this phase.
+     * /
+     * / The result is deterministically ordered: wins descending, pointsFor
+     * / descending, then Principal.compare ascending — never map iteration order.
+     */
+    getH2HStandings(roomId: RoomId): Promise<{
+        __kind__: "ok";
+        ok: Array<H2HStandingEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Admin-only query — return heartbeat and notification-worker diagnostics.
+     * / Non-admin callers receive all fields zeroed/null (same guard pattern as
+     * / getNotificationCounters).
+     */
     getHeartbeatDiagnostics(): Promise<{
         lastNotificationWorkerError?: string;
         lastNotificationWorkerCompletedAt: bigint;
         lastNotificationWorkerStartedAt: bigint;
         notificationWorkerEntryCount: bigint;
     }>;
+    /**
+     * / Public query — per-feed outcome of the most recent RSS fetch.
+     * / Each tuple is (feedUrl, succeeded). Returns [] for anonymous callers,
+     * / consistent with getRssFeedUrls. On cache-hit returns, the previous real
+     * / fetch's status is preserved (not overwritten).
+     */
     getLastRssFetchStatus(): Promise<Array<[string, boolean]>>;
+    /**
+     * / Get the most recent `limit` chat messages for a room (newest first).
+     */
     getMessages(roomId: RoomId, limit: bigint): Promise<Array<ChatMessage>>;
+    /**
+     * / Return the stored event-based bid history for a nomination.
+     * / Events are ordered oldest-first (append order).
+     */
     getNominationHistory(nominationId: NominationId): Promise<Array<BidHistoryEvent>>;
+    /**
+     * / Return the caller's currently queued player for the given room, or null if none.
+     */
     getNominationQueue(roomId: RoomId): Promise<string | null>;
     getNominations(roomId: RoomId): Promise<Array<NominationView>>;
+    /**
+     * / Admin-only query — return the six notification lifecycle counters.
+     * / Non-admin callers receive all zeros (same guard pattern as getOneSignalPlayerIds).
+     */
     getNotificationCounters(): Promise<{
         expired: bigint;
         sent: bigint;
@@ -411,6 +700,11 @@ export interface backendInterface {
         failed: bigint;
         retried: bigint;
     }>;
+    /**
+     * / Admin-only query — return a snapshot of the current notification queue.
+     * / Each entry exposes id, userId (as Text), title, attempts, and age in seconds.
+     * / Non-admin callers receive an empty array (same guard pattern as getOneSignalPlayerIds).
+     */
     getNotificationQueueSnapshot(): Promise<Array<{
         id: bigint;
         title: string;
@@ -418,13 +712,71 @@ export interface backendInterface {
         attempts: bigint;
         ageSeconds: bigint;
     }>>;
+    /**
+     * / Admin-only query — retrieve the OneSignal REST API key.
+     * / The REST API key must NEVER be exposed to non-admin callers.
+     * / Returns null for anonymous callers and non-admin callers.
+     */
     getOneSignalApiKey(): Promise<string | null>;
+    /**
+     * / Admin-only query — retrieve all stored principal → OneSignal Player ID mappings.
+     * / Returns an empty array for non-admin callers.
+     */
     getOneSignalPlayerIds(): Promise<Array<[string, string]>>;
+    /**
+     * / Public query that computes fantasy points for a stored WeeklyPlayerStats
+     * / entry at statsKey(playerId, season, week) under the given ScoringFormat.
+     * /
+     * / Returns null when no entry exists for that key — keeping null (no data)
+     * / and zero (a real zero-point performance) distinguishable. Callable by any
+     * / authenticated caller with no room-specific authorization, since it reads
+     * / shared NFL stats data.
+     */
     getPlayerWeeklyPoints(playerId: string, season: bigint, week: bigint, format: ScoringFormat): Promise<number | null>;
     getPlayers(queryText: string, position: string | null): Promise<Array<Player>>;
+    /**
+     * / Return players eligible under a room's playerFilter, optionally filtered by query text.
+     * / Backend enforces the room's position and rookie/veteran filter.
+     */
     getPlayersByRoom(roomId: RoomId, queryText: string, positionFilter: string): Promise<Array<Player>>;
+    /**
+     * / Return all players enriched with ADP values from the active dataset.
+     * / Players with no ADP match retain their existing adp value (0.0 for imported players).
+     * / If no dataset is active, returns all players with their original adp values.
+     */
     getPlayersWithADP(): Promise<Array<Player>>;
+    /**
+     * / Derive and resolve the playoff bracket for a #HeadToHead room with
+     * / playoffTeams > 0.
+     * /
+     * / Rejects with #err if the room is not found, is not #BestBall + #HeadToHead,
+     * / is a #Cumulative room, has playoffTeams == 0, or the caller is not a
+     * / participant. #Cumulative rooms and H2H rooms with playoffTeams == 0 each
+     * / get a clear, distinct error message.
+     * /
+     * / Seeding comes from getH2HStandings' existing deterministic ordering (wins →
+     * / pointsFor → Principal.compare), restricted to the top playoffTeams entries.
+     * / Bracket seed numbers are 1-based: `#Seed n` resolves to the participant
+     * / occupying seed `n` in that ordering, i.e. standings array index `n - 1`.
+     */
+    getPlayoffBracket(roomId: RoomId): Promise<{
+        __kind__: "ok";
+        ok: PlayoffBracketResult;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Return the caller's global profile (principal, displayName, avatarUrl).
+     */
     getProfile(): Promise<UserProfile>;
+    /**
+     * / Admin-only query — return each joined participant's principal ID (as Text)
+     * / paired with their display name for the given room, so the admin can see and
+     * / copy the principal IDs of all joined participants. Works on rooms in any
+     * / state (Waiting, Active, Paused, Completed) since the admin needs to inspect
+     * / principals in a live Active room. Rejects non-admin callers with #err.
+     */
     getRoomParticipantPrincipals(roomId: RoomId): Promise<{
         __kind__: "ok";
         ok: Array<{
@@ -442,10 +794,121 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Return ALL rooms (public and private) as RoomSummary list.
+     * / Access-gated: only a global admin (isGlobalAdmin) receives the full list;
+     * / any other caller receives an empty array so private-room metadata is never
+     * / leaked to non-admins. AdminPanel relies on this for full visibility.
+     */
     getRooms(): Promise<Array<RoomSummary>>;
+    /**
+     * / Public query — retrieve the configured RSS feed URLs.
+     * / Returns the default list if nothing has been configured yet.
+     */
     getRssFeedUrls(): Promise<Array<string>>;
+    /**
+     * / Public query — retrieve the configured RSS refresh interval in seconds.
+     */
     getRssRefreshIntervalSecs(): Promise<bigint>;
+    /**
+     * / Compute Cumulative Best Ball standings for a room.
+     * /
+     * / Each participant's cumulative score is the sum of their optimal Best Ball
+     * / weekly score across every applicable week from BestBallConfig.startWeek
+     * / through FINAL_WEEK (17, inclusive), computed via the Phase 3
+     * / calculator — no second scoring/lineup algorithm. Unsynced weeks contribute
+     * / 0 points and do not fail the calculation; missing individual player stats
+     * / contribute 0 while the player stays owned/benched.
+     * /
+     * / The result is deterministically ordered: descending by cumulative points,
+     * / with equal scores broken by the stable participant identifier (ascending),
+     * / so ordering never depends on map iteration order.
+     * /
+     * / Access: the caller must be a participant of the room. Non-Best-Ball rooms
+     * / are rejected.
+     */
+    getStandings(roomId: RoomId): Promise<{
+        __kind__: "ok";
+        ok: Array<StandingsEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Admin-only: get all sync status records (for the admin status view).
+     * / Each record carries its status and relevant timestamp (lastSuccessfulAt
+     * / if synced, lastAttemptedAt + lastError if failed, lastAttemptedAt if
+     * / empty/pending).
+     */
+    getSyncStatusRecords(): Promise<Array<SyncStatusRecord>>;
+    /**
+     * / Return all rooms the caller has joined as RoomSummary list.
+     * /
+     * / Self-healing (Fix 1): this is now an UPDATE func (not query) so it can
+     * / repair the userRooms index when it has drifted. It does NOT trust the
+     * / userRooms index alone — it iterates every room and uses
+     * / AuctionLib.isParticipant (which checks room.participants, the
+     * / authoritative source) to decide membership. If a room the caller is a
+     * / participant of is missing from their userRooms index, it is added; if the
+     * / index contains a room the caller is no longer a participant of, it is
+     * / removed. The participant count is sourced from room.participants.size()
+     * / (Fix 4), and the inner participants map is reconciled first.
+     */
     getUserRooms(): Promise<Array<RoomSummary>>;
+    /**
+     * / Retrieve one participant's optimal Best Ball lineup for one week.
+     * /
+     * / Identifies the room, participant, and week using the existing identifier
+     * / types (RoomId = Text, UserId = Principal, week = Nat). Returns the Phase 3
+     * / calculator result unchanged (starters, bench, total) plus participant/team
+     * / identity and the week.
+     * /
+     * / An unsynced week returns an empty lineup with total 0 — not an error — per
+     * / the Phase 3 semantics. Missing individual player stats contribute 0 points
+     * / while the player remains owned (and may appear on the bench).
+     * /
+     * / Access: the caller must be a participant of the room. Non-Best-Ball rooms
+     * / are rejected.
+     */
+    getWeeklyLineup(roomId: RoomId, participantId: UserId, week: bigint): Promise<{
+        __kind__: "ok";
+        ok: WeeklyLineupView;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Compute single-week Best Ball standings for a room.
+     * /
+     * / Each participant's score for the requested `week` is their optimal Best
+     * / Ball weekly score for that single week, computed via the Phase 3
+     * / calculator — no second scoring/lineup algorithm. An unsynced week
+     * / contributes 0 points for each participant and does not fail the
+     * / calculation (consistent with how getStandings treats unsynced weeks within
+     * / its sum); missing individual player stats contribute 0 while the player
+     * / stays owned/benched.
+     * /
+     * / The result is deterministically ordered exactly like getStandings:
+     * / descending by points, with equal scores broken by the stable participant
+     * / identifier (ascending), so ordering never depends on map iteration order.
+     * /
+     * / Access: the caller must be a participant of the room. Non-Best-Ball rooms
+     * / are rejected. The requested week must fall within the room's configured
+     * / BestBallConfig range (startWeek..FINAL_WEEK inclusive); a week outside that
+     * / range is rejected with #err.
+     */
+    getWeeklyStandings(roomId: RoomId, week: bigint): Promise<{
+        __kind__: "ok";
+        ok: Array<StandingsEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Admin-only: import an ADP dataset, keyed by datasetType ("all" or "rookies").
+     * / entries: array of AdpEntry (name + adp required, position/team optional).
+     * / Validates: max 2000 entries, non-numeric adp values rejected, duplicates ignored.
+     */
     importADPDataset(entries: Array<AdpEntry>, datasetType: string | null): Promise<{
         __kind__: "ok";
         ok: string;
@@ -453,6 +916,13 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only: batch import players from the Sleeper API.
+     * / The frontend fetches from https://api.sleeper.app/v1/players/nfl and sends
+     * / filtered, mapped batches here. NO backend HTTP outcall is made.
+     * / Returns the total number of players now stored.
+     * / Admin is assigned on first profile registration (setDisplayName), not here.
+     */
     importPlayers(batch: Array<Player>): Promise<{
         __kind__: "ok";
         ok: bigint;
@@ -460,6 +930,16 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Join a private room by password only (no room name/code field).
+     * / Matches private rooms (isPublic == false) server-side by password and
+     * / returns only the matched RoomId on success. On failure (no private room
+     * / matches the password) returns a single generic error — it does NOT
+     * / distinguish "no room exists with this password" from any other failure
+     * / reason, so this endpoint cannot be used to enumerate private rooms or
+     * / probe for valid passwords one at a time beyond what the existing
+     * / single-password-field UX already allows.
+     */
     joinPrivateRoomByPassword(password: string): Promise<{
         __kind__: "ok";
         ok: RoomId;
@@ -481,6 +961,9 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Return only public rooms (isPublic == true) as RoomSummary list for the lobby.
+     */
     listPublicRooms(): Promise<Array<RoomSummary>>;
     nominatePlayer(roomId: RoomId, playerId: string): Promise<{
         __kind__: "ok";
@@ -489,6 +972,9 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only: transition room from Active → Paused (freezes all timers)
+     */
     pauseAuction(roomId: RoomId): Promise<{
         __kind__: "ok";
         ok: null;
@@ -496,6 +982,13 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Place a proxy (max) bid — the only bidding entry point.
+     * / maxBid is private; only visible bid is public.
+     * / Immediately resolves against existing proxy bids to set correct currentBid and leader.
+     * / Visible bid starts at $1 when first bid placed, auto-increments by $1 when outbid.
+     * / If caller is already the leader and increases max, visible bid does NOT change (no timer reset).
+     */
     placeProxyBid(nominationId: NominationId, roomId: RoomId, maxBid: bigint): Promise<{
         __kind__: "ok";
         ok: null;
@@ -503,6 +996,11 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Host-only: randomly shuffle the nomination order (participants array) in the room.
+     * / Uses a Fisher-Yates shuffle seeded from Time.now().
+     * / Only allowed when the auction is in Waiting or Paused state.
+     */
     randomizeNominationOrder(roomId: RoomId): Promise<{
         __kind__: "ok";
         ok: Array<UserId>;
@@ -510,8 +1008,40 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / One-time repair entry point called from the actor's postupgrade hook
+     * / (Fix 2). Rebuilds the entire userRooms index from room.participants and
+     * / reconciles every room's inner participants map. Public so main.mo can
+     * / invoke it; not intended for end-user calls.
+     */
     reconcileMembershipIndexes(): Promise<void>;
+    /**
+     * / Admin-only: record/update the sync status for a (season, week).
+     * /
+     * / The atomic duplicate-sync guard lives here, checked and set within the
+     * / same call: if the (season, week) is already #finalized, the submission is
+     * / rejected with #err and cannot reprocess or replace the terminal state.
+     * / #partial and #notYetAttempted are retry-eligible and may be overwritten.
+     * /
+     * / This is the new adjacent method for status recording — it does NOT change
+     * / syncWeeklyStats's public signature or manual-flow behavior.
+     */
+    recordSyncStatus(season: bigint, week: bigint, status: SyncStatus, lastError: string | null, lastSuccessfulAt: bigint | null): Promise<{
+        __kind__: "ok";
+        ok: SyncStatusRecord;
+    } | {
+        __kind__: "err";
+        err: string;
+    }>;
+    /**
+     * / Anyone: recover admin access by proving knowledge of the recovery password.
+     * / On success, reassigns adminPrincipalStore to the caller (replacing whoever
+     * / was previously stored) and clears the caller's recoveryAttempts entry.
+     */
     recoverAdmin(providedSecret: string): Promise<Result>;
+    /**
+     * / Admin-only: remove the ADP dataset for a specific type ("all" or "rookies").
+     */
     removeADPDataset(datasetType: string): Promise<{
         __kind__: "ok";
         ok: string;
@@ -519,6 +1049,11 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Host-only: remove a participant from the room.
+     * / Only allowed when the auction is in Waiting or Paused state.
+     * / Cannot remove the room admin.
+     */
     removeParticipant(roomId: RoomId, targetUser: UserId): Promise<{
         __kind__: "ok";
         ok: null;
@@ -526,6 +1061,9 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only: remove another user from the room
+     */
     removeUserFromRoom(roomId: RoomId, userId: UserId): Promise<{
         __kind__: "ok";
         ok: null;
@@ -533,6 +1071,9 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only: transition room from Paused → Active (resumes all timers)
+     */
     resumeAuction(roomId: RoomId): Promise<{
         __kind__: "ok";
         ok: null;
@@ -541,6 +1082,10 @@ export interface backendInterface {
         err: string;
     }>;
     schema(): Promise<string>;
+    /**
+     * / Send a chat message to a room.
+     * / Caller must be a participant in the room.
+     */
     sendMessage(roomId: RoomId, message: string): Promise<{
         __kind__: "ok";
         ok: null;
@@ -548,6 +1093,14 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only diagnostic: send a single test push notification to the caller's
+     * / own stored OneSignal player ID, bypassing the notification queue entirely.
+     * / Mirrors the real outcall in processNotificationQueue exactly (same endpoint,
+     * / same payload shape, same app_id, same auth header) but returns the raw
+     * / OneSignal response so the admin can diagnose key/permission issues directly.
+     * / Does NOT read from or write to notificationQueue.
+     */
     sendTestPush(): Promise<{
         __kind__: "ok";
         ok: {
@@ -559,6 +1112,10 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Host-only: set the number of simultaneous active nominations (maxActivePicks).
+     * / count must be between 1 and the number of participants in the room.
+     */
     setActiveNominationCount(roomId: RoomId, count: bigint): Promise<{
         __kind__: "ok";
         ok: null;
@@ -566,6 +1123,10 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Store the avatar URL for the caller's profile.
+     * / Passing an empty string clears the avatar (sets avatarUrl = null).
+     */
     setAvatarUrl(url: string): Promise<{
         __kind__: "ok";
         ok: null;
@@ -573,7 +1134,15 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
-    setBestBallConfig(roomId: RoomId, startWeek: bigint, endWeek: bigint): Promise<Result>;
+    /**
+     * / Admin-only: replace the entire bye week mapping atomically.
+     * / Validates that each team abbreviation is non-empty and each bye week is
+     * / between 1 and 18 (NFL regular season weeks). Returns an error if any
+     * / entry is invalid. On success, also re-applies bye weeks to already-imported
+     * / players so the change takes effect immediately: each player's byeWeek is
+     * / updated based on their team using the new mapping; players whose team is
+     * / not in the mapping get byeWeek = null.
+     */
     setByeWeeks(mapping: Array<[string, bigint]>): Promise<{
         __kind__: "ok";
         ok: null;
@@ -581,6 +1150,11 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Set (or update) the caller's display name globally.
+     * / Also propagates the name change to all rooms the caller has joined.
+     * / If no admin has been set yet, the first user to call this becomes the admin.
+     */
     setDisplayName(name: string): Promise<{
         __kind__: "ok";
         ok: null;
@@ -588,6 +1162,11 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only: store the Giphy API key.
+     * / If the key is empty after trimming, stores null (removes any existing key).
+     * / Returns #ok with a confirmation message, or #err if the caller is not admin.
+     */
     setGiphyApiKey(key: string): Promise<{
         __kind__: "ok";
         ok: string;
@@ -595,6 +1174,11 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Host-only: set the nomination order for the room.
+     * / orderedUsers must contain exactly the principals currently in the room.
+     * / Only allowed when the auction is in Waiting or Paused state.
+     */
     setNominationOrder(roomId: RoomId, orderedUsers: Array<UserId>): Promise<{
         __kind__: "ok";
         ok: null;
@@ -602,6 +1186,10 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Store a pre-selected nomination for the caller in this room.
+     * / Fires automatically when the caller's nomination turn starts (via sweepExpiredNominations).
+     */
     setNominationQueue(roomId: RoomId, playerId: string): Promise<{
         __kind__: "ok";
         ok: string;
@@ -609,6 +1197,11 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only: store the OneSignal REST API key.
+     * / If the key is empty after trimming, stores null (removes any existing key).
+     * / Returns #ok with a confirmation message, or #err if the caller is not admin.
+     */
     setOneSignalApiKey(key: string): Promise<{
         __kind__: "ok";
         ok: string;
@@ -616,7 +1209,18 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Any authenticated user: store their OneSignal Player ID tied to their principal.
+     * / If id is empty after trimming, removes the entry.
+     */
     setOneSignalPlayerId(id: string): Promise<void>;
+    /**
+     * / Host-only: toggle a participant's paid status in a room's
+     * / paidParticipants list. Callable only when caller == room.admin. Adds
+     * / targetUserId idempotently when paid=true (only if not already present),
+     * / removes it when paid=false. Mirrors toggleReady's pattern. Paid status is
+     * / informational only — does not affect starting the auction.
+     */
     setParticipantPaid(roomId: RoomId, targetUserId: UserId, paid: boolean): Promise<{
         __kind__: "ok";
         ok: null;
@@ -624,7 +1228,17 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only: set (or overwrite) the recovery password.
+     * / Rejects secrets shorter than 16 characters with #err. Non-admins get
+     * / #err "Not authorized". On success hashes newSecret and stores it in
+     * / recoveryPasswordHash, overwriting any previous value.
+     */
     setRecoveryPassword(newSecret: string): Promise<Result>;
+    /**
+     * / Admin-only: set the list of RSS feed URLs to aggregate.
+     * / Clears the RSS cache so the next fetch uses the new URLs.
+     */
     setRssFeedUrls(urls: Array<string>): Promise<{
         __kind__: "ok";
         ok: null;
@@ -632,6 +1246,10 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only: set the RSS cache refresh interval in seconds.
+     * / Minimum is 60 seconds. Clears the cache so the new interval takes effect.
+     */
     setRssRefreshIntervalSecs(seconds: bigint): Promise<{
         __kind__: "ok";
         ok: null;
@@ -639,6 +1257,13 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Set the caller's skipNominationTurn flag for a room. When true,
+     * / advanceNominatorIndex skips the caller's nomination turn (a standing
+     * / toggle until turned off again). A participant can only set their own
+     * / flag. Mirrors toggleReady's pattern for room/participant lookup and
+     * / notification draining.
+     */
     setSkipNominationTurn(roomId: RoomId, skip: boolean): Promise<{
         __kind__: "ok";
         ok: null;
@@ -646,6 +1271,9 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only: transition room from Waiting → Active
+     */
     startAuction(roomId: RoomId): Promise<{
         __kind__: "ok";
         ok: null;
@@ -653,8 +1281,34 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Public update — triggers sweepExpiredNominations for a room.
+     * / Frontend calls this to drive timer resolution without polling.
+     */
     sweepNominations(roomId: RoomId): Promise<void>;
-    syncWeeklyStats(season: bigint, week: bigint, batch: Array<WeeklyPlayerStats>): Promise<{
+    /**
+     * / Endpoint that receives a typed batch of raw weekly player stats and
+     * / upserts them into weeklyPlayerStats. The backend does NOT fetch or parse
+     * / anything itself — the frontend fetches from Sleeper and sends the typed
+     * / batch here.
+     * /
+     * / Authorization:
+     * /   - the global admin is authorized unconditionally (unchanged), OR
+     * /   - a participant of the room identified by `roomId`, provided
+     * /     `room.season == season` (the season param must match the room's
+     * /     actual season).
+     * / If `roomId` does not resolve to a real room, or the caller is not a
+     * / participant of it, the call is rejected with a clear #err.
+     * /
+     * / For each entry in the batch:
+     * /   - verifies entry.season == season and entry.week == week; mismatched
+     * /     entries are skipped (counted in a diagnostic) without failing the call
+     * /   - upserts valid entries keyed by statsKey(entry.playerId, season, week),
+     * /     so re-running an already-synced week cleanly overwrites (no duplicates)
+     * /
+     * / Returns #ok with the count of entries successfully stored.
+     */
+    syncWeeklyStats(roomId: RoomId, season: bigint, week: bigint, batch: Array<WeeklyPlayerStats>): Promise<{
         __kind__: "ok";
         ok: bigint;
     } | {
@@ -668,6 +1322,12 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Toggle the caller's ready status in a room's readyParticipants list.
+     * / If the caller is NOT in readyParticipants → add them (no duplicates).
+     * / If the caller IS in readyParticipants → remove them.
+     * / Returns #err if the room is not found or the caller is not a participant.
+     */
     toggleReady(roomId: RoomId): Promise<{
         __kind__: "ok";
         ok: null;
@@ -675,6 +1335,38 @@ export interface backendInterface {
         __kind__: "err";
         err: string;
     }>;
+    /**
+     * / Admin-only: reassign a participant's slot from one principal to another.
+     * /
+     * / Transfers ALL participant-specific state from oldPrincipal to newPrincipal
+     * / so the user keeps their roster, budget, bid history, nomination position,
+     * / proxy bids, and nomination queue entry under the new principal. Works on
+     * / Active and Paused rooms (does NOT gate on room.state) — this is the recovery
+     * / path for a user who is locked out of their original principal.
+     * /
+     * / Updates ALL THREE membership stores atomically:
+     * /   (1) room.participants — replaces oldPrincipal with newPrincipal at the
+     * /       SAME array index to preserve nomination order position.
+     * /   (2) participants inner map — moves the Participant record from the old
+     * /       key to the new key, preserving budget, spent, committed, wonPlayers,
+     * /       displayName, and all other fields.
+     * /   (3) userRooms — removes roomId from oldPrincipal's list and adds it to
+     * /       newPrincipal's list.
+     * /
+     * / Also transfers participant-specific data keyed by principal:
+     * /   - bids (per nomination List<Bid>) — rewrites Bid.userId for the user's bids
+     * /   - proxyBids (per nomination Map<UserId, ProxyBid>) — moves the entry and
+     * /     rewrites ProxyBid.userId
+     * /   - nominationHistory (per nomination List<BidHistoryEvent>) — rewrites
+     * /     BidHistoryEvent.userId for the user's events
+     * /   - nominationQueue (keyed by "roomId|userId.toText()") — moves the entry
+     * /   - nominations (Nomination.nominatedBy / Nomination.bidLeader) — rewrites
+     * /     any reference to oldPrincipal so the user's active nominations and bid
+     * /     leadership are preserved under the new principal
+     * /
+     * / Guard: admin-only — same global admin guard pattern as deleteRoom /
+     * / getOneSignalPlayerIds (hardcoded principal OR adminPrincipalStore.get("admin")).
+     */
     transferParticipantIdentity(roomId: RoomId, oldPrincipal: UserId, newPrincipal: UserId): Promise<{
         __kind__: "ok";
         ok: string;
@@ -683,6 +1375,10 @@ export interface backendInterface {
         err: string;
     }>;
     transform(raw: TransformationInput): Promise<TransformationOutput>;
+    /**
+     * / Admin-only: update room timer settings and max active picks.
+     * / Allowed in Waiting state, Active (with no active nominations), or Paused.
+     */
     updateRoomSettings(roomId: RoomId, nomTimerSecs: bigint, bidTimerSecs: bigint, maxRosterSize: bigint | null, adpDataset: string): Promise<{
         __kind__: "ok";
         ok: null;
@@ -691,7 +1387,7 @@ export interface backendInterface {
         err: string;
     }>;
 }
-import type { ADPDataset as _ADPDataset, AdpEntry as _AdpEntry, AuctionSettings as _AuctionSettings, AuctionState as _AuctionState, BestBallConfig as _BestBallConfig, BidHistoryEvent as _BidHistoryEvent, BidHistoryEventType as _BidHistoryEventType, Cell as _Cell, CustomScoringSettings as _CustomScoringSettings, NominationId as _NominationId, NominationState as _NominationState, NominationView as _NominationView, ParticipantBudgetView as _ParticipantBudgetView, ParticipantView as _ParticipantView, Player as _Player, PlayerFilter as _PlayerFilter, PrivateParticipantBudget as _PrivateParticipantBudget, ProxyBid as _ProxyBid, PublicParticipantBudget as _PublicParticipantBudget, Result as _Result, Result__1 as _Result__1, Room as _Room, RoomId as _RoomId, RoomSummary as _RoomSummary, RoomView as _RoomView, RosterSettings as _RosterSettings, ScoringFormat as _ScoringFormat, Timestamp as _Timestamp, UserId as _UserId, UserProfile as _UserProfile, Value as _Value, WonPlayer as _WonPlayer } from "./declarations/backend.did.d.ts";
+import type { ADPDataset as _ADPDataset, AdpEntry as _AdpEntry, AuctionSettings as _AuctionSettings, AuctionState as _AuctionState, BestBallConfig as _BestBallConfig, BidHistoryEvent as _BidHistoryEvent, BidHistoryEventType as _BidHistoryEventType, BracketSlot as _BracketSlot, BracketSlotState as _BracketSlotState, Cell as _Cell, CompetitionMode as _CompetitionMode, CustomScoringSettings as _CustomScoringSettings, FinalizeResult as _FinalizeResult, GameStatus as _GameStatus, GameType as _GameType, H2HStandingEntry as _H2HStandingEntry, LineupBenchEntry as _LineupBenchEntry, LineupSlot as _LineupSlot, NominationId as _NominationId, NominationState as _NominationState, NominationView as _NominationView, ParticipantBudgetView as _ParticipantBudgetView, ParticipantView as _ParticipantView, Player as _Player, PlayerFilter as _PlayerFilter, PlayoffBracketResult as _PlayoffBracketResult, PlayoffGame as _PlayoffGame, PlayoffGameResult as _PlayoffGameResult, PrivateParticipantBudget as _PrivateParticipantBudget, ProxyBid as _ProxyBid, PublicParticipantBudget as _PublicParticipantBudget, ResolvedContestant as _ResolvedContestant, Result as _Result, Result__1 as _Result__1, Room as _Room, RoomId as _RoomId, RoomSummary as _RoomSummary, RoomView as _RoomView, RosterSettings as _RosterSettings, ScoringFormat as _ScoringFormat, StandingsEntry as _StandingsEntry, SyncStatus as _SyncStatus, SyncStatusRecord as _SyncStatusRecord, Timestamp as _Timestamp, UserId as _UserId, UserProfile as _UserProfile, Value as _Value, WeeklyLineupView as _WeeklyLineupView, WonPlayer as _WonPlayer } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async adminDrainQueueNow(): Promise<{
@@ -712,6 +1408,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.adminDrainQueueNow();
             return from_candid_variant_n1(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async backfillFinalizedScores(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.backfillFinalizedScores();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.backfillFinalizedScores();
+            return result;
         }
     }
     async checkIsAdmin(): Promise<boolean> {
@@ -762,7 +1472,21 @@ export class Backend implements backendInterface {
             return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
         }
     }
-    async createRoom(arg0: string, arg1: bigint, arg2: AuctionSettings, arg3: boolean, arg4: string | null, arg5: PlayerFilter | null, arg6: bigint | null, arg7: RosterSettings | null, arg8: bigint | null, arg9: string | null, arg10: bigint, arg11: ScoringFormat): Promise<{
+    async computeDedupSeasonWeeks(): Promise<Array<[bigint, bigint]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.computeDedupSeasonWeeks();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.computeDedupSeasonWeeks();
+            return result;
+        }
+    }
+    async createRoom(arg0: GameType, arg1: CompetitionMode, arg2: bigint, arg3: string, arg4: bigint, arg5: AuctionSettings, arg6: boolean, arg7: string | null, arg8: PlayerFilter | null, arg9: bigint | null, arg10: RosterSettings | null, arg11: bigint | null, arg12: string | null, arg13: bigint, arg14: ScoringFormat): Promise<{
         __kind__: "ok";
         ok: RoomId;
     } | {
@@ -771,15 +1495,15 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.createRoom(arg0, arg1, to_candid_AuctionSettings_n3(this._uploadFile, this._downloadFile, arg2), arg3, to_candid_opt_n5(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n6(this._uploadFile, this._downloadFile, arg5), to_candid_opt_n7(this._uploadFile, this._downloadFile, arg6), to_candid_opt_n8(this._uploadFile, this._downloadFile, arg7), to_candid_opt_n7(this._uploadFile, this._downloadFile, arg8), to_candid_opt_n5(this._uploadFile, this._downloadFile, arg9), arg10, to_candid_ScoringFormat_n9(this._uploadFile, this._downloadFile, arg11));
-                return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.createRoom(to_candid_GameType_n3(this._uploadFile, this._downloadFile, arg0), to_candid_CompetitionMode_n5(this._uploadFile, this._downloadFile, arg1), arg2, arg3, arg4, to_candid_AuctionSettings_n7(this._uploadFile, this._downloadFile, arg5), arg6, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg7), to_candid_opt_n10(this._uploadFile, this._downloadFile, arg8), to_candid_opt_n11(this._uploadFile, this._downloadFile, arg9), to_candid_opt_n12(this._uploadFile, this._downloadFile, arg10), to_candid_opt_n11(this._uploadFile, this._downloadFile, arg11), to_candid_opt_n9(this._uploadFile, this._downloadFile, arg12), arg13, to_candid_ScoringFormat_n13(this._uploadFile, this._downloadFile, arg14));
+                return from_candid_variant_n15(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createRoom(arg0, arg1, to_candid_AuctionSettings_n3(this._uploadFile, this._downloadFile, arg2), arg3, to_candid_opt_n5(this._uploadFile, this._downloadFile, arg4), to_candid_opt_n6(this._uploadFile, this._downloadFile, arg5), to_candid_opt_n7(this._uploadFile, this._downloadFile, arg6), to_candid_opt_n8(this._uploadFile, this._downloadFile, arg7), to_candid_opt_n7(this._uploadFile, this._downloadFile, arg8), to_candid_opt_n5(this._uploadFile, this._downloadFile, arg9), arg10, to_candid_ScoringFormat_n9(this._uploadFile, this._downloadFile, arg11));
-            return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.createRoom(to_candid_GameType_n3(this._uploadFile, this._downloadFile, arg0), to_candid_CompetitionMode_n5(this._uploadFile, this._downloadFile, arg1), arg2, arg3, arg4, to_candid_AuctionSettings_n7(this._uploadFile, this._downloadFile, arg5), arg6, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg7), to_candid_opt_n10(this._uploadFile, this._downloadFile, arg8), to_candid_opt_n11(this._uploadFile, this._downloadFile, arg9), to_candid_opt_n12(this._uploadFile, this._downloadFile, arg10), to_candid_opt_n11(this._uploadFile, this._downloadFile, arg11), to_candid_opt_n9(this._uploadFile, this._downloadFile, arg12), arg13, to_candid_ScoringFormat_n13(this._uploadFile, this._downloadFile, arg14));
+            return from_candid_variant_n15(this._uploadFile, this._downloadFile, result);
         }
     }
     async deleteRoom(arg0: RoomId): Promise<{
@@ -822,7 +1546,7 @@ export class Backend implements backendInterface {
             return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
         }
     }
-    async endAuction(arg0: RoomId): Promise<{
+    async endAuction(arg0: RoomId, arg1: bigint | null): Promise<{
         __kind__: "ok";
         ok: null;
     } | {
@@ -831,14 +1555,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.endAuction(arg0);
+                const result = await this.actor.endAuction(arg0, to_candid_opt_n11(this._uploadFile, this._downloadFile, arg1));
                 return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.endAuction(arg0);
+            const result = await this.actor.endAuction(arg0, to_candid_opt_n11(this._uploadFile, this._downloadFile, arg1));
             return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -846,14 +1570,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.execute(arg0);
-                return from_candid_Result__1_n12(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result__1_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.execute(arg0);
-            return from_candid_Result__1_n12(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result__1_n16(this._uploadFile, this._downloadFile, result);
         }
     }
     async fetchRssFeeds(): Promise<string> {
@@ -870,60 +1594,88 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async finalizeWeek(arg0: bigint, arg1: bigint): Promise<FinalizeResult> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.finalizeWeek(arg0, arg1);
+                return from_candid_FinalizeResult_n24(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.finalizeWeek(arg0, arg1);
+            return from_candid_FinalizeResult_n24(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getADPDataset(): Promise<ADPDataset | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getADPDataset();
-                return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getADPDataset();
-            return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
         }
     }
     async getADPDatasetByType(arg0: string): Promise<ADPDataset | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getADPDatasetByType(arg0);
-                return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getADPDatasetByType(arg0);
-            return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
         }
     }
     async getActiveADPDataset(): Promise<ADPDataset | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getActiveADPDataset();
-                return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getActiveADPDataset();
-            return from_candid_opt_n20(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getApiDoc(): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getApiDoc();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getApiDoc();
+            return result;
         }
     }
     async getBestBallConfig(arg0: RoomId): Promise<BestBallConfig | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getBestBallConfig(arg0);
-                return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n32(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getBestBallConfig(arg0);
-            return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n32(this._uploadFile, this._downloadFile, result);
         }
     }
     async getByeWeeks(): Promise<Array<[string, bigint]>> {
@@ -958,28 +1710,62 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getDisplayName(arg0);
-                return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n31(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getDisplayName(arg0);
-            return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n31(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getFlaggedWeeks(): Promise<Array<SyncStatusRecord>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getFlaggedWeeks();
+                return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getFlaggedWeeks();
+            return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
         }
     }
     async getGiphyApiKey(): Promise<string | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getGiphyApiKey();
-                return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n31(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getGiphyApiKey();
-            return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n31(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getH2HStandings(arg0: RoomId): Promise<{
+        __kind__: "ok";
+        ok: Array<H2HStandingEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getH2HStandings(arg0);
+                return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getH2HStandings(arg0);
+            return from_candid_variant_n39(this._uploadFile, this._downloadFile, result);
         }
     }
     async getHeartbeatDiagnostics(): Promise<{
@@ -991,14 +1777,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getHeartbeatDiagnostics();
-                return from_candid_record_n28(this._uploadFile, this._downloadFile, result);
+                return from_candid_record_n40(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getHeartbeatDiagnostics();
-            return from_candid_record_n28(this._uploadFile, this._downloadFile, result);
+            return from_candid_record_n40(this._uploadFile, this._downloadFile, result);
         }
     }
     async getLastRssFetchStatus(): Promise<Array<[string, boolean]>> {
@@ -1033,42 +1819,42 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getNominationHistory(arg0);
-                return from_candid_vec_n29(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n41(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getNominationHistory(arg0);
-            return from_candid_vec_n29(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n41(this._uploadFile, this._downloadFile, result);
         }
     }
     async getNominationQueue(arg0: RoomId): Promise<string | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getNominationQueue(arg0);
-                return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n31(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getNominationQueue(arg0);
-            return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n31(this._uploadFile, this._downloadFile, result);
         }
     }
     async getNominations(arg0: RoomId): Promise<Array<NominationView>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getNominations(arg0);
-                return from_candid_vec_n35(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n47(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getNominations(arg0);
-            return from_candid_vec_n35(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n47(this._uploadFile, this._downloadFile, result);
         }
     }
     async getNotificationCounters(): Promise<{
@@ -1116,14 +1902,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getOneSignalApiKey();
-                return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n31(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getOneSignalApiKey();
-            return from_candid_opt_n26(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n31(this._uploadFile, this._downloadFile, result);
         }
     }
     async getOneSignalPlayerIds(): Promise<Array<[string, string]>> {
@@ -1143,71 +1929,91 @@ export class Backend implements backendInterface {
     async getPlayerWeeklyPoints(arg0: string, arg1: bigint, arg2: bigint, arg3: ScoringFormat): Promise<number | null> {
         if (this.processError) {
             try {
-                const result = await this.actor.getPlayerWeeklyPoints(arg0, arg1, arg2, to_candid_ScoringFormat_n9(this._uploadFile, this._downloadFile, arg3));
-                return from_candid_opt_n41(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.getPlayerWeeklyPoints(arg0, arg1, arg2, to_candid_ScoringFormat_n13(this._uploadFile, this._downloadFile, arg3));
+                return from_candid_opt_n53(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getPlayerWeeklyPoints(arg0, arg1, arg2, to_candid_ScoringFormat_n9(this._uploadFile, this._downloadFile, arg3));
-            return from_candid_opt_n41(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.getPlayerWeeklyPoints(arg0, arg1, arg2, to_candid_ScoringFormat_n13(this._uploadFile, this._downloadFile, arg3));
+            return from_candid_opt_n53(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPlayers(arg0: string, arg1: string | null): Promise<Array<Player>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getPlayers(arg0, to_candid_opt_n5(this._uploadFile, this._downloadFile, arg1));
-                return from_candid_vec_n42(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.getPlayers(arg0, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
+                return from_candid_vec_n54(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getPlayers(arg0, to_candid_opt_n5(this._uploadFile, this._downloadFile, arg1));
-            return from_candid_vec_n42(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.getPlayers(arg0, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
+            return from_candid_vec_n54(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPlayersByRoom(arg0: RoomId, arg1: string, arg2: string): Promise<Array<Player>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getPlayersByRoom(arg0, arg1, arg2);
-                return from_candid_vec_n42(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n54(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPlayersByRoom(arg0, arg1, arg2);
-            return from_candid_vec_n42(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n54(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPlayersWithADP(): Promise<Array<Player>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getPlayersWithADP();
-                return from_candid_vec_n42(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n54(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPlayersWithADP();
-            return from_candid_vec_n42(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n54(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getPlayoffBracket(arg0: RoomId): Promise<{
+        __kind__: "ok";
+        ok: PlayoffBracketResult;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getPlayoffBracket(arg0);
+                return from_candid_variant_n58(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getPlayoffBracket(arg0);
+            return from_candid_variant_n58(this._uploadFile, this._downloadFile, result);
         }
     }
     async getProfile(): Promise<UserProfile> {
         if (this.processError) {
             try {
                 const result = await this.actor.getProfile();
-                return from_candid_UserProfile_n46(this._uploadFile, this._downloadFile, result);
+                return from_candid_UserProfile_n73(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getProfile();
-            return from_candid_UserProfile_n46(this._uploadFile, this._downloadFile, result);
+            return from_candid_UserProfile_n73(this._uploadFile, this._downloadFile, result);
         }
     }
     async getRoomParticipantPrincipals(arg0: RoomId): Promise<{
@@ -1223,14 +2029,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getRoomParticipantPrincipals(arg0);
-                return from_candid_variant_n48(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n75(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getRoomParticipantPrincipals(arg0);
-            return from_candid_variant_n48(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n75(this._uploadFile, this._downloadFile, result);
         }
     }
     async getRoomState(arg0: RoomId): Promise<{
@@ -1243,28 +2049,28 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getRoomState(arg0);
-                return from_candid_variant_n49(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getRoomState(arg0);
-            return from_candid_variant_n49(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
         }
     }
     async getRooms(): Promise<Array<RoomSummary>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getRooms();
-                return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getRooms();
-            return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
         }
     }
     async getRssFeedUrls(): Promise<Array<string>> {
@@ -1295,18 +2101,92 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getStandings(arg0: RoomId): Promise<{
+        __kind__: "ok";
+        ok: Array<StandingsEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getStandings(arg0);
+                return from_candid_variant_n104(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getStandings(arg0);
+            return from_candid_variant_n104(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getSyncStatusRecords(): Promise<Array<SyncStatusRecord>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getSyncStatusRecords();
+                return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSyncStatusRecords();
+            return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getUserRooms(): Promise<Array<RoomSummary>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserRooms();
-                return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserRooms();
-            return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getWeeklyLineup(arg0: RoomId, arg1: UserId, arg2: bigint): Promise<{
+        __kind__: "ok";
+        ok: WeeklyLineupView;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getWeeklyLineup(arg0, arg1, arg2);
+                return from_candid_variant_n105(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getWeeklyLineup(arg0, arg1, arg2);
+            return from_candid_variant_n105(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getWeeklyStandings(arg0: RoomId, arg1: bigint): Promise<{
+        __kind__: "ok";
+        ok: Array<StandingsEntry>;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getWeeklyStandings(arg0, arg1);
+                return from_candid_variant_n104(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getWeeklyStandings(arg0, arg1);
+            return from_candid_variant_n104(this._uploadFile, this._downloadFile, result);
         }
     }
     async importADPDataset(arg0: Array<AdpEntry>, arg1: string | null): Promise<{
@@ -1318,15 +2198,15 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.importADPDataset(to_candid_vec_n73(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n5(this._uploadFile, this._downloadFile, arg1));
-                return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+                const result = await this.actor.importADPDataset(to_candid_vec_n111(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
+                return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.importADPDataset(to_candid_vec_n73(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n5(this._uploadFile, this._downloadFile, arg1));
-            return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+            const result = await this.actor.importADPDataset(to_candid_vec_n111(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
+            return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
         }
     }
     async importPlayers(arg0: Array<Player>): Promise<{
@@ -1338,14 +2218,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.importPlayers(to_candid_vec_n77(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.importPlayers(to_candid_vec_n115(this._uploadFile, this._downloadFile, arg0));
                 return from_candid_variant_n1(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.importPlayers(to_candid_vec_n77(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.importPlayers(to_candid_vec_n115(this._uploadFile, this._downloadFile, arg0));
             return from_candid_variant_n1(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -1359,14 +2239,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.joinPrivateRoomByPassword(arg0);
-                return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n15(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.joinPrivateRoomByPassword(arg0);
-            return from_candid_variant_n11(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n15(this._uploadFile, this._downloadFile, result);
         }
     }
     async joinRoom(arg0: RoomId, arg1: string | null): Promise<{
@@ -1378,14 +2258,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.joinRoom(arg0, to_candid_opt_n5(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.joinRoom(arg0, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
                 return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.joinRoom(arg0, to_candid_opt_n5(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.joinRoom(arg0, to_candid_opt_n9(this._uploadFile, this._downloadFile, arg1));
             return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -1413,14 +2293,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.listPublicRooms();
-                return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.listPublicRooms();
-            return from_candid_vec_n70(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n101(this._uploadFile, this._downloadFile, result);
         }
     }
     async nominatePlayer(arg0: RoomId, arg1: string): Promise<{
@@ -1433,14 +2313,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.nominatePlayer(arg0, arg1);
-                return from_candid_variant_n80(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n118(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.nominatePlayer(arg0, arg1);
-            return from_candid_variant_n80(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n118(this._uploadFile, this._downloadFile, result);
         }
     }
     async pauseAuction(arg0: RoomId): Promise<{
@@ -1493,14 +2373,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.randomizeNominationOrder(arg0);
-                return from_candid_variant_n81(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n119(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.randomizeNominationOrder(arg0);
-            return from_candid_variant_n81(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n119(this._uploadFile, this._downloadFile, result);
         }
     }
     async reconcileMembershipIndexes(): Promise<void> {
@@ -1517,18 +2397,38 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async recordSyncStatus(arg0: bigint, arg1: bigint, arg2: SyncStatus, arg3: string | null, arg4: bigint | null): Promise<{
+        __kind__: "ok";
+        ok: SyncStatusRecord;
+    } | {
+        __kind__: "err";
+        err: string;
+    }> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.recordSyncStatus(arg0, arg1, to_candid_SyncStatus_n120(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n9(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n122(this._uploadFile, this._downloadFile, arg4));
+                return from_candid_variant_n123(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.recordSyncStatus(arg0, arg1, to_candid_SyncStatus_n120(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n9(this._uploadFile, this._downloadFile, arg3), to_candid_opt_n122(this._uploadFile, this._downloadFile, arg4));
+            return from_candid_variant_n123(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async recoverAdmin(arg0: string): Promise<Result> {
         if (this.processError) {
             try {
                 const result = await this.actor.recoverAdmin(arg0);
-                return from_candid_Result_n82(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_n124(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.recoverAdmin(arg0);
-            return from_candid_Result_n82(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_n124(this._uploadFile, this._downloadFile, result);
         }
     }
     async removeADPDataset(arg0: string): Promise<{
@@ -1541,14 +2441,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.removeADPDataset(arg0);
-                return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.removeADPDataset(arg0);
-            return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
         }
     }
     async removeParticipant(arg0: RoomId, arg1: UserId): Promise<{
@@ -1659,14 +2559,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.sendTestPush();
-                return from_candid_variant_n83(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n125(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.sendTestPush();
-            return from_candid_variant_n83(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n125(this._uploadFile, this._downloadFile, result);
         }
     }
     async setActiveNominationCount(arg0: RoomId, arg1: bigint): Promise<{
@@ -1707,20 +2607,6 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.setAvatarUrl(arg0);
             return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async setBestBallConfig(arg0: RoomId, arg1: bigint, arg2: bigint): Promise<Result> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.setBestBallConfig(arg0, arg1, arg2);
-                return from_candid_Result_n82(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.setBestBallConfig(arg0, arg1, arg2);
-            return from_candid_Result_n82(this._uploadFile, this._downloadFile, result);
         }
     }
     async setByeWeeks(arg0: Array<[string, bigint]>): Promise<{
@@ -1773,14 +2659,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.setGiphyApiKey(arg0);
-                return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.setGiphyApiKey(arg0);
-            return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
         }
     }
     async setNominationOrder(arg0: RoomId, arg1: Array<UserId>): Promise<{
@@ -1813,14 +2699,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.setNominationQueue(arg0, arg1);
-                return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.setNominationQueue(arg0, arg1);
-            return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
         }
     }
     async setOneSignalApiKey(arg0: string): Promise<{
@@ -1833,14 +2719,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.setOneSignalApiKey(arg0);
-                return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.setOneSignalApiKey(arg0);
-            return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
         }
     }
     async setOneSignalPlayerId(arg0: string): Promise<void> {
@@ -1881,14 +2767,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.setRecoveryPassword(arg0);
-                return from_candid_Result_n82(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_n124(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.setRecoveryPassword(arg0);
-            return from_candid_Result_n82(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_n124(this._uploadFile, this._downloadFile, result);
         }
     }
     async setRssFeedUrls(arg0: Array<string>): Promise<{
@@ -1985,7 +2871,7 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async syncWeeklyStats(arg0: bigint, arg1: bigint, arg2: Array<WeeklyPlayerStats>): Promise<{
+    async syncWeeklyStats(arg0: RoomId, arg1: bigint, arg2: bigint, arg3: Array<WeeklyPlayerStats>): Promise<{
         __kind__: "ok";
         ok: bigint;
     } | {
@@ -1994,14 +2880,14 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.syncWeeklyStats(arg0, arg1, arg2);
+                const result = await this.actor.syncWeeklyStats(arg0, arg1, arg2, arg3);
                 return from_candid_variant_n1(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.syncWeeklyStats(arg0, arg1, arg2);
+            const result = await this.actor.syncWeeklyStats(arg0, arg1, arg2, arg3);
             return from_candid_variant_n1(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -2055,14 +2941,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.transferParticipantIdentity(arg0, arg1, arg2);
-                return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+                return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.transferParticipantIdentity(arg0, arg1, arg2);
-            return from_candid_variant_n76(this._uploadFile, this._downloadFile, result);
+            return from_candid_variant_n114(this._uploadFile, this._downloadFile, result);
         }
     }
     async transform(arg0: TransformationInput): Promise<TransformationOutput> {
@@ -2088,109 +2974,226 @@ export class Backend implements backendInterface {
     }> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateRoomSettings(arg0, arg1, arg2, to_candid_opt_n7(this._uploadFile, this._downloadFile, arg3), arg4);
+                const result = await this.actor.updateRoomSettings(arg0, arg1, arg2, to_candid_opt_n11(this._uploadFile, this._downloadFile, arg3), arg4);
                 return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateRoomSettings(arg0, arg1, arg2, to_candid_opt_n7(this._uploadFile, this._downloadFile, arg3), arg4);
+            const result = await this.actor.updateRoomSettings(arg0, arg1, arg2, to_candid_opt_n11(this._uploadFile, this._downloadFile, arg3), arg4);
             return from_candid_variant_n2(this._uploadFile, this._downloadFile, result);
         }
     }
 }
-function from_candid_ADPDataset_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ADPDataset): ADPDataset {
-    return from_candid_record_n22(_uploadFile, _downloadFile, value);
+function from_candid_ADPDataset_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ADPDataset): ADPDataset {
+    return from_candid_record_n27(_uploadFile, _downloadFile, value);
 }
-function from_candid_AdpEntry_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AdpEntry): AdpEntry {
-    return from_candid_record_n25(_uploadFile, _downloadFile, value);
+function from_candid_AdpEntry_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AdpEntry): AdpEntry {
+    return from_candid_record_n30(_uploadFile, _downloadFile, value);
 }
-function from_candid_AuctionSettings_n68(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AuctionSettings): AuctionSettings {
-    return from_candid_record_n69(_uploadFile, _downloadFile, value);
+function from_candid_AuctionSettings_n95(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AuctionSettings): AuctionSettings {
+    return from_candid_record_n96(_uploadFile, _downloadFile, value);
 }
-function from_candid_AuctionState_n66(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AuctionState): AuctionState {
+function from_candid_AuctionState_n93(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _AuctionState): AuctionState {
+    return from_candid_variant_n94(_uploadFile, _downloadFile, value);
+}
+function from_candid_BidHistoryEventType_n45(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BidHistoryEventType): BidHistoryEventType {
+    return from_candid_variant_n46(_uploadFile, _downloadFile, value);
+}
+function from_candid_BidHistoryEvent_n42(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BidHistoryEvent): BidHistoryEvent {
+    return from_candid_record_n43(_uploadFile, _downloadFile, value);
+}
+function from_candid_BracketSlotState_n66(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BracketSlotState): BracketSlotState {
     return from_candid_variant_n67(_uploadFile, _downloadFile, value);
 }
-function from_candid_BidHistoryEventType_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BidHistoryEventType): BidHistoryEventType {
-    return from_candid_variant_n34(_uploadFile, _downloadFile, value);
+function from_candid_BracketSlot_n70(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BracketSlot): BracketSlot {
+    return from_candid_variant_n71(_uploadFile, _downloadFile, value);
 }
-function from_candid_BidHistoryEvent_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _BidHistoryEvent): BidHistoryEvent {
-    return from_candid_record_n31(_uploadFile, _downloadFile, value);
+function from_candid_Cell_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Cell): Cell {
+    return from_candid_record_n21(_uploadFile, _downloadFile, value);
 }
-function from_candid_Cell_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Cell): Cell {
+function from_candid_CompetitionMode_n99(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _CompetitionMode): CompetitionMode {
+    return from_candid_variant_n100(_uploadFile, _downloadFile, value);
+}
+function from_candid_FinalizeResult_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _FinalizeResult): FinalizeResult {
+    return from_candid_variant_n1(_uploadFile, _downloadFile, value);
+}
+function from_candid_GameStatus_n64(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _GameStatus): GameStatus {
+    return from_candid_variant_n65(_uploadFile, _downloadFile, value);
+}
+function from_candid_GameType_n97(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _GameType): GameType {
+    return from_candid_variant_n98(_uploadFile, _downloadFile, value);
+}
+function from_candid_LineupSlot_n109(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _LineupSlot): LineupSlot {
+    return from_candid_record_n110(_uploadFile, _downloadFile, value);
+}
+function from_candid_NominationState_n51(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _NominationState): NominationState {
+    return from_candid_variant_n52(_uploadFile, _downloadFile, value);
+}
+function from_candid_NominationView_n48(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _NominationView): NominationView {
+    return from_candid_record_n49(_uploadFile, _downloadFile, value);
+}
+function from_candid_ParticipantBudgetView_n82(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ParticipantBudgetView): ParticipantBudgetView {
+    return from_candid_variant_n83(_uploadFile, _downloadFile, value);
+}
+function from_candid_ParticipantView_n80(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ParticipantView): ParticipantView {
+    return from_candid_record_n81(_uploadFile, _downloadFile, value);
+}
+function from_candid_Player_n55(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Player): Player {
+    return from_candid_record_n56(_uploadFile, _downloadFile, value);
+}
+function from_candid_PlayoffBracketResult_n59(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PlayoffBracketResult): PlayoffBracketResult {
+    return from_candid_record_n60(_uploadFile, _downloadFile, value);
+}
+function from_candid_PlayoffGameResult_n62(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PlayoffGameResult): PlayoffGameResult {
+    return from_candid_record_n63(_uploadFile, _downloadFile, value);
+}
+function from_candid_PlayoffGame_n68(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _PlayoffGame): PlayoffGame {
+    return from_candid_record_n69(_uploadFile, _downloadFile, value);
+}
+function from_candid_Result__1_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result__1): Result__1 {
     return from_candid_record_n17(_uploadFile, _downloadFile, value);
 }
-function from_candid_NominationState_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _NominationState): NominationState {
-    return from_candid_variant_n40(_uploadFile, _downloadFile, value);
-}
-function from_candid_NominationView_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _NominationView): NominationView {
-    return from_candid_record_n37(_uploadFile, _downloadFile, value);
-}
-function from_candid_ParticipantBudgetView_n55(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ParticipantBudgetView): ParticipantBudgetView {
-    return from_candid_variant_n56(_uploadFile, _downloadFile, value);
-}
-function from_candid_ParticipantView_n53(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ParticipantView): ParticipantView {
-    return from_candid_record_n54(_uploadFile, _downloadFile, value);
-}
-function from_candid_Player_n43(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Player): Player {
-    return from_candid_record_n44(_uploadFile, _downloadFile, value);
-}
-function from_candid_Result__1_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result__1): Result__1 {
-    return from_candid_record_n13(_uploadFile, _downloadFile, value);
-}
-function from_candid_Result_n82(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result): Result {
+function from_candid_Result_n124(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result): Result {
     return from_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
-function from_candid_RoomSummary_n71(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RoomSummary): RoomSummary {
-    return from_candid_record_n72(_uploadFile, _downloadFile, value);
+function from_candid_RoomSummary_n102(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RoomSummary): RoomSummary {
+    return from_candid_record_n103(_uploadFile, _downloadFile, value);
 }
-function from_candid_RoomView_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RoomView): RoomView {
-    return from_candid_record_n51(_uploadFile, _downloadFile, value);
+function from_candid_RoomView_n77(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _RoomView): RoomView {
+    return from_candid_record_n78(_uploadFile, _downloadFile, value);
 }
-function from_candid_Room_n60(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Room): Room {
-    return from_candid_record_n61(_uploadFile, _downloadFile, value);
+function from_candid_Room_n87(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Room): Room {
+    return from_candid_record_n88(_uploadFile, _downloadFile, value);
 }
-function from_candid_ScoringFormat_n63(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ScoringFormat): ScoringFormat {
-    return from_candid_variant_n64(_uploadFile, _downloadFile, value);
+function from_candid_ScoringFormat_n90(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ScoringFormat): ScoringFormat {
+    return from_candid_variant_n91(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserProfile_n46(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserProfile): UserProfile {
-    return from_candid_record_n47(_uploadFile, _downloadFile, value);
+function from_candid_SyncStatusRecord_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SyncStatusRecord): SyncStatusRecord {
+    return from_candid_record_n35(_uploadFile, _downloadFile, value);
 }
-function from_candid_Value_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Value): Value {
-    return from_candid_variant_n19(_uploadFile, _downloadFile, value);
+function from_candid_SyncStatus_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SyncStatus): SyncStatus {
+    return from_candid_variant_n37(_uploadFile, _downloadFile, value);
 }
-function from_candid_WonPlayer_n58(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _WonPlayer): WonPlayer {
-    return from_candid_record_n59(_uploadFile, _downloadFile, value);
+function from_candid_UserProfile_n73(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserProfile): UserProfile {
+    return from_candid_record_n74(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_ADPDataset]): ADPDataset | null {
-    return value.length === 0 ? null : from_candid_ADPDataset_n21(_uploadFile, _downloadFile, value[0]);
+function from_candid_Value_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Value): Value {
+    return from_candid_variant_n23(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+function from_candid_WeeklyLineupView_n106(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _WeeklyLineupView): WeeklyLineupView {
+    return from_candid_record_n107(_uploadFile, _downloadFile, value);
+}
+function from_candid_WonPlayer_n85(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _WonPlayer): WonPlayer {
+    return from_candid_record_n86(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_ADPDataset]): ADPDataset | null {
+    return value.length === 0 ? null : from_candid_ADPDataset_n26(_uploadFile, _downloadFile, value[0]);
+}
+function from_candid_opt_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_BestBallConfig]): BestBallConfig | null {
+function from_candid_opt_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_BestBallConfig]): BestBallConfig | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
+function from_candid_opt_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n38(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserId]): UserId | null {
+function from_candid_opt_n44(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [boolean]): boolean | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [number]): number | null {
+function from_candid_opt_n50(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserId]): UserId | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n45(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
+function from_candid_opt_n53(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [number]): number | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n62(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_RosterSettings]): RosterSettings | null {
+function from_candid_opt_n57(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n65(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Timestamp]): Timestamp | null {
+function from_candid_opt_n89(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_RosterSettings]): RosterSettings | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_opt_n92(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Timestamp]): Timestamp | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n103(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: _RoomId;
+    name: string;
+    createdAt: _Timestamp;
+    state: _AuctionState;
+    participantCount: bigint;
+    maxParticipants: bigint;
+    isPublic: boolean;
+    adminId: _UserId;
+}): {
+    id: RoomId;
+    name: string;
+    createdAt: Timestamp;
+    state: AuctionState;
+    participantCount: bigint;
+    maxParticipants: bigint;
+    isPublic: boolean;
+    adminId: UserId;
+} {
+    return {
+        id: value.id,
+        name: value.name,
+        createdAt: value.createdAt,
+        state: from_candid_AuctionState_n93(_uploadFile, _downloadFile, value.state),
+        participantCount: value.participantCount,
+        maxParticipants: value.maxParticipants,
+        isPublic: value.isPublic,
+        adminId: value.adminId
+    };
+}
+function from_candid_record_n107(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    total: number;
+    displayName: string;
+    starters: Array<_LineupSlot>;
+    week: bigint;
+    participantId: _UserId;
+    bench: Array<_LineupBenchEntry>;
+    roomId: _RoomId;
+}): {
+    total: number;
+    displayName: string;
+    starters: Array<LineupSlot>;
+    week: bigint;
+    participantId: UserId;
+    bench: Array<LineupBenchEntry>;
+    roomId: RoomId;
+} {
+    return {
+        total: value.total,
+        displayName: value.displayName,
+        starters: from_candid_vec_n108(_uploadFile, _downloadFile, value.starters),
+        week: value.week,
+        participantId: value.participantId,
+        bench: value.bench,
+        roomId: value.roomId
+    };
+}
+function from_candid_record_n110(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    playerId: [] | [string];
+    slot: string;
+    position: string;
+    points: number;
+}): {
+    playerId?: string;
+    slot: string;
+    position: string;
+    points: number;
+} {
+    return {
+        playerId: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.playerId)),
+        slot: value.slot,
+        position: value.position,
+        points: value.points
+    };
+}
+function from_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     hasMore: boolean;
     rows: Array<Array<_Cell>>;
 }): {
@@ -2199,10 +3202,10 @@ function from_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uin
 } {
     return {
         hasMore: value.hasMore,
-        rows: from_candid_vec_n14(_uploadFile, _downloadFile, value.rows)
+        rows: from_candid_vec_n18(_uploadFile, _downloadFile, value.rows)
     };
 }
-function from_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     value: _Value;
     name: string;
 }): {
@@ -2210,11 +3213,11 @@ function from_candid_record_n17(_uploadFile: (file: ExternalBlob) => Promise<Uin
     name: string;
 } {
     return {
-        value: from_candid_Value_n18(_uploadFile, _downloadFile, value.value),
+        value: from_candid_Value_n22(_uploadFile, _downloadFile, value.value),
         name: value.name
     };
 }
-function from_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     lastUpdated: bigint;
     importedAt: bigint;
     entries: Array<_AdpEntry>;
@@ -2226,10 +3229,10 @@ function from_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uin
     return {
         lastUpdated: value.lastUpdated,
         importedAt: value.importedAt,
-        entries: from_candid_vec_n23(_uploadFile, _downloadFile, value.entries)
+        entries: from_candid_vec_n28(_uploadFile, _downloadFile, value.entries)
     };
 }
-function from_candid_record_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     adp: number;
     name: string;
     team: [] | [string];
@@ -2243,11 +3246,35 @@ function from_candid_record_n25(_uploadFile: (file: ExternalBlob) => Promise<Uin
     return {
         adp: value.adp,
         name: value.name,
-        team: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.team)),
-        position: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.position))
+        team: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.team)),
+        position: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.position))
     };
 }
-function from_candid_record_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    status: _SyncStatus;
+    lastAttemptedAt: bigint;
+    week: bigint;
+    season: bigint;
+    lastError: [] | [string];
+    lastSuccessfulAt: [] | [bigint];
+}): {
+    status: SyncStatus;
+    lastAttemptedAt: bigint;
+    week: bigint;
+    season: bigint;
+    lastError?: string;
+    lastSuccessfulAt?: bigint;
+} {
+    return {
+        status: from_candid_SyncStatus_n36(_uploadFile, _downloadFile, value.status),
+        lastAttemptedAt: value.lastAttemptedAt,
+        week: value.week,
+        season: value.season,
+        lastError: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.lastError)),
+        lastSuccessfulAt: record_opt_to_undefined(from_candid_opt_n38(_uploadFile, _downloadFile, value.lastSuccessfulAt))
+    };
+}
+function from_candid_record_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     lastNotificationWorkerError: [] | [string];
     lastNotificationWorkerCompletedAt: bigint;
     lastNotificationWorkerStartedAt: bigint;
@@ -2259,13 +3286,13 @@ function from_candid_record_n28(_uploadFile: (file: ExternalBlob) => Promise<Uin
     notificationWorkerEntryCount: bigint;
 } {
     return {
-        lastNotificationWorkerError: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.lastNotificationWorkerError)),
+        lastNotificationWorkerError: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.lastNotificationWorkerError)),
         lastNotificationWorkerCompletedAt: value.lastNotificationWorkerCompletedAt,
         lastNotificationWorkerStartedAt: value.lastNotificationWorkerStartedAt,
         notificationWorkerEntryCount: value.notificationWorkerEntryCount
     };
 }
-function from_candid_record_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n43(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     displayName: string;
     userId: _UserId;
     isAutoBid: [] | [boolean];
@@ -2285,14 +3312,14 @@ function from_candid_record_n31(_uploadFile: (file: ExternalBlob) => Promise<Uin
     return {
         displayName: value.displayName,
         userId: value.userId,
-        isAutoBid: record_opt_to_undefined(from_candid_opt_n32(_uploadFile, _downloadFile, value.isAutoBid)),
+        isAutoBid: record_opt_to_undefined(from_candid_opt_n44(_uploadFile, _downloadFile, value.isAutoBid)),
         timestamp: value.timestamp,
         playerName: value.playerName,
         amount: value.amount,
-        eventType: from_candid_BidHistoryEventType_n33(_uploadFile, _downloadFile, value.eventType)
+        eventType: from_candid_BidHistoryEventType_n45(_uploadFile, _downloadFile, value.eventType)
     };
 }
-function from_candid_record_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n49(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: _NominationId;
     bidLeader: [] | [_UserId];
     playerId: string;
@@ -2323,13 +3350,13 @@ function from_candid_record_n37(_uploadFile: (file: ExternalBlob) => Promise<Uin
 } {
     return {
         id: value.id,
-        bidLeader: record_opt_to_undefined(from_candid_opt_n38(_uploadFile, _downloadFile, value.bidLeader)),
+        bidLeader: record_opt_to_undefined(from_candid_opt_n50(_uploadFile, _downloadFile, value.bidLeader)),
         playerId: value.playerId,
         team: value.team,
-        bidLeaderName: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.bidLeaderName)),
+        bidLeaderName: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.bidLeaderName)),
         timerSecsRemaining: value.timerSecsRemaining,
-        state: from_candid_NominationState_n39(_uploadFile, _downloadFile, value.state),
-        imageUrl: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.imageUrl)),
+        state: from_candid_NominationState_n51(_uploadFile, _downloadFile, value.state),
+        imageUrl: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.imageUrl)),
         playerName: value.playerName,
         nominatedBy: value.nominatedBy,
         currentBid: value.currentBid,
@@ -2337,7 +3364,7 @@ function from_candid_record_n37(_uploadFile: (file: ExternalBlob) => Promise<Uin
         position: value.position
     };
 }
-function from_candid_record_n44(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n56(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: string;
     adp: number;
     yearsExp: bigint;
@@ -2362,12 +3389,67 @@ function from_candid_record_n44(_uploadFile: (file: ExternalBlob) => Promise<Uin
         yearsExp: value.yearsExp,
         name: value.name,
         team: value.team,
-        byeWeek: record_opt_to_undefined(from_candid_opt_n45(_uploadFile, _downloadFile, value.byeWeek)),
+        byeWeek: record_opt_to_undefined(from_candid_opt_n57(_uploadFile, _downloadFile, value.byeWeek)),
         position: value.position,
-        headshotUrl: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.headshotUrl))
+        headshotUrl: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.headshotUrl))
     };
 }
-function from_candid_record_n47(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n60(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    games: Array<_PlayoffGameResult>;
+    champion: {
+        some: _ResolvedContestant;
+    } | {
+        inProgress: null;
+    };
+}): {
+    games: Array<PlayoffGameResult>;
+    champion: {
+        __kind__: "some";
+        some: ResolvedContestant;
+    } | {
+        __kind__: "inProgress";
+        inProgress: null;
+    };
+} {
+    return {
+        games: from_candid_vec_n61(_uploadFile, _downloadFile, value.games),
+        champion: from_candid_variant_n72(_uploadFile, _downloadFile, value.champion)
+    };
+}
+function from_candid_record_n63(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    status: _GameStatus;
+    away: _BracketSlotState;
+    game: _PlayoffGame;
+    home: _BracketSlotState;
+}): {
+    status: GameStatus;
+    away: BracketSlotState;
+    game: PlayoffGame;
+    home: BracketSlotState;
+} {
+    return {
+        status: from_candid_GameStatus_n64(_uploadFile, _downloadFile, value.status),
+        away: from_candid_BracketSlotState_n66(_uploadFile, _downloadFile, value.away),
+        game: from_candid_PlayoffGame_n68(_uploadFile, _downloadFile, value.game),
+        home: from_candid_BracketSlotState_n66(_uploadFile, _downloadFile, value.home)
+    };
+}
+function from_candid_record_n69(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    away: _BracketSlot;
+    home: _BracketSlot;
+    week: bigint;
+}): {
+    away: BracketSlot;
+    home: BracketSlot;
+    week: bigint;
+} {
+    return {
+        away: from_candid_BracketSlot_n70(_uploadFile, _downloadFile, value.away),
+        home: from_candid_BracketSlot_n70(_uploadFile, _downloadFile, value.home),
+        week: value.week
+    };
+}
+function from_candid_record_n74(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     displayName: string;
     userId: _UserId;
     avatarUrl: [] | [string];
@@ -2379,10 +3461,10 @@ function from_candid_record_n47(_uploadFile: (file: ExternalBlob) => Promise<Uin
     return {
         displayName: value.displayName,
         userId: value.userId,
-        avatarUrl: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.avatarUrl))
+        avatarUrl: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.avatarUrl))
     };
 }
-function from_candid_record_n51(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n78(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     queuedPlayerId: [] | [string];
     participants: Array<_ParticipantView>;
     draftedPlayerIds: Array<string>;
@@ -2406,19 +3488,19 @@ function from_candid_record_n51(_uploadFile: (file: ExternalBlob) => Promise<Uin
     myProxyBids: Array<ProxyBid>;
 } {
     return {
-        queuedPlayerId: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.queuedPlayerId)),
-        participants: from_candid_vec_n52(_uploadFile, _downloadFile, value.participants),
+        queuedPlayerId: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.queuedPlayerId)),
+        participants: from_candid_vec_n79(_uploadFile, _downloadFile, value.participants),
         draftedPlayerIds: value.draftedPlayerIds,
-        currentNominatorName: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.currentNominatorName)),
-        currentNominatorId: record_opt_to_undefined(from_candid_opt_n38(_uploadFile, _downloadFile, value.currentNominatorId)),
-        room: from_candid_Room_n60(_uploadFile, _downloadFile, value.room),
+        currentNominatorName: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.currentNominatorName)),
+        currentNominatorId: record_opt_to_undefined(from_candid_opt_n50(_uploadFile, _downloadFile, value.currentNominatorId)),
+        room: from_candid_Room_n87(_uploadFile, _downloadFile, value.room),
         nominationTimerSecsRemaining: value.nominationTimerSecsRemaining,
-        activeNominations: from_candid_vec_n35(_uploadFile, _downloadFile, value.activeNominations),
-        completedNominations: from_candid_vec_n35(_uploadFile, _downloadFile, value.completedNominations),
+        activeNominations: from_candid_vec_n47(_uploadFile, _downloadFile, value.activeNominations),
+        completedNominations: from_candid_vec_n47(_uploadFile, _downloadFile, value.completedNominations),
         myProxyBids: value.myProxyBids
     };
 }
-function from_candid_record_n54(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n81(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     displayName: string;
     userId: _UserId;
     budgetView: _ParticipantBudgetView;
@@ -2436,13 +3518,13 @@ function from_candid_record_n54(_uploadFile: (file: ExternalBlob) => Promise<Uin
     return {
         displayName: value.displayName,
         userId: value.userId,
-        budgetView: from_candid_ParticipantBudgetView_n55(_uploadFile, _downloadFile, value.budgetView),
-        avatarUrl: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.avatarUrl)),
+        budgetView: from_candid_ParticipantBudgetView_n82(_uploadFile, _downloadFile, value.budgetView),
+        avatarUrl: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.avatarUrl)),
         skipNominationTurn: value.skipNominationTurn,
-        wonPlayers: from_candid_vec_n57(_uploadFile, _downloadFile, value.wonPlayers)
+        wonPlayers: from_candid_vec_n84(_uploadFile, _downloadFile, value.wonPlayers)
     };
 }
-function from_candid_record_n59(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n86(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     playerId: string;
     team: string;
     closedAt: _Timestamp;
@@ -2466,13 +3548,13 @@ function from_candid_record_n59(_uploadFile: (file: ExternalBlob) => Promise<Uin
         team: value.team,
         closedAt: value.closedAt,
         playerName: value.playerName,
-        byeWeek: record_opt_to_undefined(from_candid_opt_n45(_uploadFile, _downloadFile, value.byeWeek)),
+        byeWeek: record_opt_to_undefined(from_candid_opt_n57(_uploadFile, _downloadFile, value.byeWeek)),
         nominatedBy: value.nominatedBy,
         position: value.position,
         winningBid: value.winningBid
     };
 }
-function from_candid_record_n61(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n88(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: _RoomId;
     leagueFormat: [] | [string];
     rosterSettings: [] | [_RosterSettings];
@@ -2488,11 +3570,14 @@ function from_candid_record_n61(_uploadFile: (file: ExternalBlob) => Promise<Uin
     teamCount: [] | [bigint];
     season: bigint;
     nominationTurnPausedAt: [] | [_Timestamp];
+    playoffTeams: bigint;
     playerFilter: _PlayerFilter;
     state: _AuctionState;
     paidParticipants: Array<_UserId>;
     settings: _AuctionSettings;
+    gameType: _GameType;
     isPublic: boolean;
+    competitionMode: _CompetitionMode;
     nominationTurnStartedAt: _Timestamp;
 }): {
     id: RoomId;
@@ -2510,38 +3595,44 @@ function from_candid_record_n61(_uploadFile: (file: ExternalBlob) => Promise<Uin
     teamCount?: bigint;
     season: bigint;
     nominationTurnPausedAt?: Timestamp;
+    playoffTeams: bigint;
     playerFilter: PlayerFilter;
     state: AuctionState;
     paidParticipants: Array<UserId>;
     settings: AuctionSettings;
+    gameType: GameType;
     isPublic: boolean;
+    competitionMode: CompetitionMode;
     nominationTurnStartedAt: Timestamp;
 } {
     return {
         id: value.id,
-        leagueFormat: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.leagueFormat)),
-        rosterSettings: record_opt_to_undefined(from_candid_opt_n62(_uploadFile, _downloadFile, value.rosterSettings)),
+        leagueFormat: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.leagueFormat)),
+        rosterSettings: record_opt_to_undefined(from_candid_opt_n89(_uploadFile, _downloadFile, value.rosterSettings)),
         participants: value.participants,
         admin: value.admin,
         nominatorIndex: value.nominatorIndex,
         readyParticipants: value.readyParticipants,
-        password: record_opt_to_undefined(from_candid_opt_n26(_uploadFile, _downloadFile, value.password)),
+        password: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.password)),
         name: value.name,
         createdAt: value.createdAt,
-        scoringFormat: from_candid_ScoringFormat_n63(_uploadFile, _downloadFile, value.scoringFormat),
+        scoringFormat: from_candid_ScoringFormat_n90(_uploadFile, _downloadFile, value.scoringFormat),
         startingBudget: value.startingBudget,
-        teamCount: record_opt_to_undefined(from_candid_opt_n45(_uploadFile, _downloadFile, value.teamCount)),
+        teamCount: record_opt_to_undefined(from_candid_opt_n57(_uploadFile, _downloadFile, value.teamCount)),
         season: value.season,
-        nominationTurnPausedAt: record_opt_to_undefined(from_candid_opt_n65(_uploadFile, _downloadFile, value.nominationTurnPausedAt)),
+        nominationTurnPausedAt: record_opt_to_undefined(from_candid_opt_n92(_uploadFile, _downloadFile, value.nominationTurnPausedAt)),
+        playoffTeams: value.playoffTeams,
         playerFilter: value.playerFilter,
-        state: from_candid_AuctionState_n66(_uploadFile, _downloadFile, value.state),
+        state: from_candid_AuctionState_n93(_uploadFile, _downloadFile, value.state),
         paidParticipants: value.paidParticipants,
-        settings: from_candid_AuctionSettings_n68(_uploadFile, _downloadFile, value.settings),
+        settings: from_candid_AuctionSettings_n95(_uploadFile, _downloadFile, value.settings),
+        gameType: from_candid_GameType_n97(_uploadFile, _downloadFile, value.gameType),
         isPublic: value.isPublic,
+        competitionMode: from_candid_CompetitionMode_n99(_uploadFile, _downloadFile, value.competitionMode),
         nominationTurnStartedAt: value.nominationTurnStartedAt
     };
 }
-function from_candid_record_n69(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n96(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     minBidIncrement: bigint;
     maxActivePicks: bigint;
     adpDataset: string;
@@ -2565,37 +3656,7 @@ function from_candid_record_n69(_uploadFile: (file: ExternalBlob) => Promise<Uin
         nomTimerSecs: value.nomTimerSecs,
         maxParticipants: value.maxParticipants,
         bidTimerSecs: value.bidTimerSecs,
-        maxRosterSize: record_opt_to_undefined(from_candid_opt_n45(_uploadFile, _downloadFile, value.maxRosterSize))
-    };
-}
-function from_candid_record_n72(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    id: _RoomId;
-    name: string;
-    createdAt: _Timestamp;
-    state: _AuctionState;
-    participantCount: bigint;
-    maxParticipants: bigint;
-    isPublic: boolean;
-    adminId: _UserId;
-}): {
-    id: RoomId;
-    name: string;
-    createdAt: Timestamp;
-    state: AuctionState;
-    participantCount: bigint;
-    maxParticipants: bigint;
-    isPublic: boolean;
-    adminId: UserId;
-} {
-    return {
-        id: value.id,
-        name: value.name,
-        createdAt: value.createdAt,
-        state: from_candid_AuctionState_n66(_uploadFile, _downloadFile, value.state),
-        participantCount: value.participantCount,
-        maxParticipants: value.maxParticipants,
-        isPublic: value.isPublic,
-        adminId: value.adminId
+        maxRosterSize: record_opt_to_undefined(from_candid_opt_n57(_uploadFile, _downloadFile, value.maxRosterSize))
     };
 }
 function from_candid_variant_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -2617,7 +3678,155 @@ function from_candid_variant_n1(_uploadFile: (file: ExternalBlob) => Promise<Uin
         err: value.err
     } : value;
 }
-function from_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n100(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    Cumulative: null;
+} | {
+    HeadToHead: null;
+}): CompetitionMode {
+    return "Cumulative" in value ? CompetitionMode.Cumulative : "HeadToHead" in value ? CompetitionMode.HeadToHead : value;
+}
+function from_candid_variant_n104(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: Array<_StandingsEntry>;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: Array<StandingsEntry>;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n105(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: _WeeklyLineupView;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: WeeklyLineupView;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: from_candid_WeeklyLineupView_n106(_uploadFile, _downloadFile, value.ok)
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n114(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: string;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: string;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n118(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: _NominationId;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: NominationId;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n119(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: Array<_UserId>;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: Array<UserId>;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n123(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: _SyncStatusRecord;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: SyncStatusRecord;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: from_candid_SyncStatusRecord_n34(_uploadFile, _downloadFile, value.ok)
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n125(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: {
+        body: string;
+        playerId: string;
+        looksSuccessful: boolean;
+    };
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: {
+        body: string;
+        playerId: string;
+        looksSuccessful: boolean;
+    };
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     ok: _RoomId;
 } | {
     err: string;
@@ -2636,7 +3845,26 @@ function from_candid_variant_n11(_uploadFile: (file: ExternalBlob) => Promise<Ui
         err: value.err
     } : value;
 }
-function from_candid_variant_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: null;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: null;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     int: bigint;
 } | {
     nat: bigint;
@@ -2687,13 +3915,22 @@ function from_candid_variant_n19(_uploadFile: (file: ExternalBlob) => Promise<Ui
         text: value.text
     } : value;
 }
-function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    ok: null;
+function from_candid_variant_n37(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    finalized: null;
+} | {
+    notYetAttempted: null;
+} | {
+    partial: null;
+}): SyncStatus {
+    return "finalized" in value ? SyncStatus.finalized : "notYetAttempted" in value ? SyncStatus.notYetAttempted : "partial" in value ? SyncStatus.partial : value;
+}
+function from_candid_variant_n39(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: Array<_H2HStandingEntry>;
 } | {
     err: string;
 }): {
     __kind__: "ok";
-    ok: null;
+    ok: Array<H2HStandingEntry>;
 } | {
     __kind__: "err";
     err: string;
@@ -2706,7 +3943,7 @@ function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uin
         err: value.err
     } : value;
 }
-function from_candid_variant_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n46(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     nominationEnded: null;
 } | {
     leaderChanged: null;
@@ -2715,7 +3952,7 @@ function from_candid_variant_n34(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): BidHistoryEventType {
     return "nominationEnded" in value ? BidHistoryEventType.nominationEnded : "leaderChanged" in value ? BidHistoryEventType.leaderChanged : "nominationCreated" in value ? BidHistoryEventType.nominationCreated : value;
 }
-function from_candid_variant_n40(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n52(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     Closed: null;
 } | {
     Active: null;
@@ -2724,7 +3961,126 @@ function from_candid_variant_n40(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): NominationState {
     return "Closed" in value ? NominationState.Closed : "Active" in value ? NominationState.Active : "Expired" in value ? NominationState.Expired : value;
 }
-function from_candid_variant_n48(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n58(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: _PlayoffBracketResult;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: PlayoffBracketResult;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: from_candid_PlayoffBracketResult_n59(_uploadFile, _downloadFile, value.ok)
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n65(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    resolved: {
+        winner: _UserId;
+        homeScore: number;
+        awayScore: number;
+    };
+} | {
+    pendingOnDependency: null;
+} | {
+    pendingOnSync: null;
+}): {
+    __kind__: "resolved";
+    resolved: {
+        winner: UserId;
+        homeScore: number;
+        awayScore: number;
+    };
+} | {
+    __kind__: "pendingOnDependency";
+    pendingOnDependency: null;
+} | {
+    __kind__: "pendingOnSync";
+    pendingOnSync: null;
+} {
+    return "resolved" in value ? {
+        __kind__: "resolved",
+        resolved: value.resolved
+    } : "pendingOnDependency" in value ? {
+        __kind__: "pendingOnDependency",
+        pendingOnDependency: value.pendingOnDependency
+    } : "pendingOnSync" in value ? {
+        __kind__: "pendingOnSync",
+        pendingOnSync: value.pendingOnSync
+    } : value;
+}
+function from_candid_variant_n67(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    resolved: _ResolvedContestant;
+} | {
+    pendingOnDependency: null;
+} | {
+    pendingOnSync: null;
+}): {
+    __kind__: "resolved";
+    resolved: ResolvedContestant;
+} | {
+    __kind__: "pendingOnDependency";
+    pendingOnDependency: null;
+} | {
+    __kind__: "pendingOnSync";
+    pendingOnSync: null;
+} {
+    return "resolved" in value ? {
+        __kind__: "resolved",
+        resolved: value.resolved
+    } : "pendingOnDependency" in value ? {
+        __kind__: "pendingOnDependency",
+        pendingOnDependency: value.pendingOnDependency
+    } : "pendingOnSync" in value ? {
+        __kind__: "pendingOnSync",
+        pendingOnSync: value.pendingOnSync
+    } : value;
+}
+function from_candid_variant_n71(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    WinnerOf: bigint;
+} | {
+    Seed: bigint;
+}): {
+    __kind__: "WinnerOf";
+    WinnerOf: bigint;
+} | {
+    __kind__: "Seed";
+    Seed: bigint;
+} {
+    return "WinnerOf" in value ? {
+        __kind__: "WinnerOf",
+        WinnerOf: value.WinnerOf
+    } : "Seed" in value ? {
+        __kind__: "Seed",
+        Seed: value.Seed
+    } : value;
+}
+function from_candid_variant_n72(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    some: _ResolvedContestant;
+} | {
+    inProgress: null;
+}): {
+    __kind__: "some";
+    some: ResolvedContestant;
+} | {
+    __kind__: "inProgress";
+    inProgress: null;
+} {
+    return "some" in value ? {
+        __kind__: "some",
+        some: value.some
+    } : "inProgress" in value ? {
+        __kind__: "inProgress",
+        inProgress: value.inProgress
+    } : value;
+}
+function from_candid_variant_n75(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     ok: Array<{
         principal: string;
         displayName: string;
@@ -2749,7 +4105,7 @@ function from_candid_variant_n48(_uploadFile: (file: ExternalBlob) => Promise<Ui
         err: value.err
     } : value;
 }
-function from_candid_variant_n49(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n76(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     ok: _RoomView;
 } | {
     err: string;
@@ -2762,13 +4118,13 @@ function from_candid_variant_n49(_uploadFile: (file: ExternalBlob) => Promise<Ui
 } {
     return "ok" in value ? {
         __kind__: "ok",
-        ok: from_candid_RoomView_n50(_uploadFile, _downloadFile, value.ok)
+        ok: from_candid_RoomView_n77(_uploadFile, _downloadFile, value.ok)
     } : "err" in value ? {
         __kind__: "err",
         err: value.err
     } : value;
 }
-function from_candid_variant_n56(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n83(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     public: _PublicParticipantBudget;
 } | {
     private: _PrivateParticipantBudget;
@@ -2787,7 +4143,7 @@ function from_candid_variant_n56(_uploadFile: (file: ExternalBlob) => Promise<Ui
         private: value.private
     } : value;
 }
-function from_candid_variant_n64(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n91(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     ppr: null;
 } | {
     std: null;
@@ -2822,7 +4178,7 @@ function from_candid_variant_n64(_uploadFile: (file: ExternalBlob) => Promise<Ui
         custom: value.custom
     } : value;
 }
-function from_candid_variant_n67(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n94(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     Paused: null;
 } | {
     Active: null;
@@ -2833,169 +4189,88 @@ function from_candid_variant_n67(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): AuctionState {
     return "Paused" in value ? AuctionState.Paused : "Active" in value ? AuctionState.Active : "Waiting" in value ? AuctionState.Waiting : "Completed" in value ? AuctionState.Completed : value;
 }
-function from_candid_variant_n76(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    ok: string;
+function from_candid_variant_n98(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    BestBall: null;
 } | {
-    err: string;
-}): {
-    __kind__: "ok";
-    ok: string;
+    Guillotine: null;
 } | {
-    __kind__: "err";
-    err: string;
-} {
-    return "ok" in value ? {
-        __kind__: "ok",
-        ok: value.ok
-    } : "err" in value ? {
-        __kind__: "err",
-        err: value.err
-    } : value;
+    Auction: null;
+}): GameType {
+    return "BestBall" in value ? GameType.BestBall : "Guillotine" in value ? GameType.Guillotine : "Auction" in value ? GameType.Auction : value;
 }
-function from_candid_variant_n80(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    ok: _NominationId;
-} | {
-    err: string;
-}): {
-    __kind__: "ok";
-    ok: NominationId;
-} | {
-    __kind__: "err";
-    err: string;
-} {
-    return "ok" in value ? {
-        __kind__: "ok",
-        ok: value.ok
-    } : "err" in value ? {
-        __kind__: "err",
-        err: value.err
-    } : value;
+function from_candid_vec_n101(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_RoomSummary>): Array<RoomSummary> {
+    return value.map((x)=>from_candid_RoomSummary_n102(_uploadFile, _downloadFile, x));
 }
-function from_candid_variant_n81(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    ok: Array<_UserId>;
-} | {
-    err: string;
-}): {
-    __kind__: "ok";
-    ok: Array<UserId>;
-} | {
-    __kind__: "err";
-    err: string;
-} {
-    return "ok" in value ? {
-        __kind__: "ok",
-        ok: value.ok
-    } : "err" in value ? {
-        __kind__: "err",
-        err: value.err
-    } : value;
+function from_candid_vec_n108(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_LineupSlot>): Array<LineupSlot> {
+    return value.map((x)=>from_candid_LineupSlot_n109(_uploadFile, _downloadFile, x));
 }
-function from_candid_variant_n83(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    ok: {
-        body: string;
-        playerId: string;
-        looksSuccessful: boolean;
-    };
-} | {
-    err: string;
-}): {
-    __kind__: "ok";
-    ok: {
-        body: string;
-        playerId: string;
-        looksSuccessful: boolean;
-    };
-} | {
-    __kind__: "err";
-    err: string;
-} {
-    return "ok" in value ? {
-        __kind__: "ok",
-        ok: value.ok
-    } : "err" in value ? {
-        __kind__: "err",
-        err: value.err
-    } : value;
+function from_candid_vec_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<Array<_Cell>>): Array<Array<Cell>> {
+    return value.map((x)=>from_candid_vec_n19(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<Array<_Cell>>): Array<Array<Cell>> {
-    return value.map((x)=>from_candid_vec_n15(_uploadFile, _downloadFile, x));
+function from_candid_vec_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Cell>): Array<Cell> {
+    return value.map((x)=>from_candid_Cell_n20(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Cell>): Array<Cell> {
-    return value.map((x)=>from_candid_Cell_n16(_uploadFile, _downloadFile, x));
+function from_candid_vec_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_AdpEntry>): Array<AdpEntry> {
+    return value.map((x)=>from_candid_AdpEntry_n29(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_AdpEntry>): Array<AdpEntry> {
-    return value.map((x)=>from_candid_AdpEntry_n24(_uploadFile, _downloadFile, x));
+function from_candid_vec_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_SyncStatusRecord>): Array<SyncStatusRecord> {
+    return value.map((x)=>from_candid_SyncStatusRecord_n34(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_BidHistoryEvent>): Array<BidHistoryEvent> {
-    return value.map((x)=>from_candid_BidHistoryEvent_n30(_uploadFile, _downloadFile, x));
+function from_candid_vec_n41(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_BidHistoryEvent>): Array<BidHistoryEvent> {
+    return value.map((x)=>from_candid_BidHistoryEvent_n42(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_NominationView>): Array<NominationView> {
-    return value.map((x)=>from_candid_NominationView_n36(_uploadFile, _downloadFile, x));
+function from_candid_vec_n47(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_NominationView>): Array<NominationView> {
+    return value.map((x)=>from_candid_NominationView_n48(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n42(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Player>): Array<Player> {
-    return value.map((x)=>from_candid_Player_n43(_uploadFile, _downloadFile, x));
+function from_candid_vec_n54(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Player>): Array<Player> {
+    return value.map((x)=>from_candid_Player_n55(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n52(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_ParticipantView>): Array<ParticipantView> {
-    return value.map((x)=>from_candid_ParticipantView_n53(_uploadFile, _downloadFile, x));
+function from_candid_vec_n61(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_PlayoffGameResult>): Array<PlayoffGameResult> {
+    return value.map((x)=>from_candid_PlayoffGameResult_n62(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n57(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_WonPlayer>): Array<WonPlayer> {
-    return value.map((x)=>from_candid_WonPlayer_n58(_uploadFile, _downloadFile, x));
+function from_candid_vec_n79(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_ParticipantView>): Array<ParticipantView> {
+    return value.map((x)=>from_candid_ParticipantView_n80(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n70(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_RoomSummary>): Array<RoomSummary> {
-    return value.map((x)=>from_candid_RoomSummary_n71(_uploadFile, _downloadFile, x));
+function from_candid_vec_n84(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_WonPlayer>): Array<WonPlayer> {
+    return value.map((x)=>from_candid_WonPlayer_n85(_uploadFile, _downloadFile, x));
 }
-function to_candid_AdpEntry_n74(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AdpEntry): _AdpEntry {
-    return to_candid_record_n75(_uploadFile, _downloadFile, value);
+function to_candid_AdpEntry_n112(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AdpEntry): _AdpEntry {
+    return to_candid_record_n113(_uploadFile, _downloadFile, value);
 }
-function to_candid_AuctionSettings_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AuctionSettings): _AuctionSettings {
-    return to_candid_record_n4(_uploadFile, _downloadFile, value);
+function to_candid_AuctionSettings_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: AuctionSettings): _AuctionSettings {
+    return to_candid_record_n8(_uploadFile, _downloadFile, value);
 }
-function to_candid_Player_n78(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Player): _Player {
-    return to_candid_record_n79(_uploadFile, _downloadFile, value);
+function to_candid_CompetitionMode_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: CompetitionMode): _CompetitionMode {
+    return to_candid_variant_n6(_uploadFile, _downloadFile, value);
 }
-function to_candid_ScoringFormat_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ScoringFormat): _ScoringFormat {
-    return to_candid_variant_n10(_uploadFile, _downloadFile, value);
+function to_candid_GameType_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: GameType): _GameType {
+    return to_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function to_candid_opt_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
+function to_candid_Player_n116(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Player): _Player {
+    return to_candid_record_n117(_uploadFile, _downloadFile, value);
+}
+function to_candid_ScoringFormat_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ScoringFormat): _ScoringFormat {
+    return to_candid_variant_n14(_uploadFile, _downloadFile, value);
+}
+function to_candid_SyncStatus_n120(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SyncStatus): _SyncStatus {
+    return to_candid_variant_n121(_uploadFile, _downloadFile, value);
+}
+function to_candid_opt_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PlayerFilter | null): [] | [_PlayerFilter] {
     return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: PlayerFilter | null): [] | [_PlayerFilter] {
+function to_candid_opt_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: bigint | null): [] | [bigint] {
     return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: bigint | null): [] | [bigint] {
+function to_candid_opt_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: RosterSettings | null): [] | [_RosterSettings] {
     return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: RosterSettings | null): [] | [_RosterSettings] {
+function to_candid_opt_n122(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: bigint | null): [] | [bigint] {
     return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_record_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    minBidIncrement: bigint;
-    maxActivePicks: bigint;
-    adpDataset: string;
-    nomTimerSecs: bigint;
-    maxParticipants: bigint;
-    bidTimerSecs: bigint;
-    maxRosterSize?: bigint;
-}): {
-    minBidIncrement: bigint;
-    maxActivePicks: bigint;
-    adpDataset: string;
-    nomTimerSecs: bigint;
-    maxParticipants: bigint;
-    bidTimerSecs: bigint;
-    maxRosterSize: [] | [bigint];
-} {
-    return {
-        minBidIncrement: value.minBidIncrement,
-        maxActivePicks: value.maxActivePicks,
-        adpDataset: value.adpDataset,
-        nomTimerSecs: value.nomTimerSecs,
-        maxParticipants: value.maxParticipants,
-        bidTimerSecs: value.bidTimerSecs,
-        maxRosterSize: value.maxRosterSize ? candid_some(value.maxRosterSize) : candid_none()
-    };
+function to_candid_opt_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
+    return value === null ? candid_none() : candid_some(value);
 }
-function to_candid_record_n75(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n113(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     adp: number;
     name: string;
     team?: string;
@@ -3013,7 +4288,7 @@ function to_candid_record_n75(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         position: value.position ? candid_some(value.position) : candid_none()
     };
 }
-function to_candid_record_n79(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n117(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: string;
     adp: number;
     yearsExp: bigint;
@@ -3043,7 +4318,49 @@ function to_candid_record_n79(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         headshotUrl: value.headshotUrl ? candid_some(value.headshotUrl) : candid_none()
     };
 }
-function to_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    minBidIncrement: bigint;
+    maxActivePicks: bigint;
+    adpDataset: string;
+    nomTimerSecs: bigint;
+    maxParticipants: bigint;
+    bidTimerSecs: bigint;
+    maxRosterSize?: bigint;
+}): {
+    minBidIncrement: bigint;
+    maxActivePicks: bigint;
+    adpDataset: string;
+    nomTimerSecs: bigint;
+    maxParticipants: bigint;
+    bidTimerSecs: bigint;
+    maxRosterSize: [] | [bigint];
+} {
+    return {
+        minBidIncrement: value.minBidIncrement,
+        maxActivePicks: value.maxActivePicks,
+        adpDataset: value.adpDataset,
+        nomTimerSecs: value.nomTimerSecs,
+        maxParticipants: value.maxParticipants,
+        bidTimerSecs: value.bidTimerSecs,
+        maxRosterSize: value.maxRosterSize ? candid_some(value.maxRosterSize) : candid_none()
+    };
+}
+function to_candid_variant_n121(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SyncStatus): {
+    finalized: null;
+} | {
+    notYetAttempted: null;
+} | {
+    partial: null;
+} {
+    return value == SyncStatus.finalized ? {
+        finalized: null
+    } : value == SyncStatus.notYetAttempted ? {
+        notYetAttempted: null
+    } : value == SyncStatus.partial ? {
+        partial: null
+    } : value;
+}
+function to_candid_variant_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     __kind__: "ppr";
     ppr: null;
 } | {
@@ -3074,11 +4391,37 @@ function to_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint
         custom: value.custom
     } : value;
 }
-function to_candid_vec_n73(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<AdpEntry>): Array<_AdpEntry> {
-    return value.map((x)=>to_candid_AdpEntry_n74(_uploadFile, _downloadFile, x));
+function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: GameType): {
+    BestBall: null;
+} | {
+    Guillotine: null;
+} | {
+    Auction: null;
+} {
+    return value == GameType.BestBall ? {
+        BestBall: null
+    } : value == GameType.Guillotine ? {
+        Guillotine: null
+    } : value == GameType.Auction ? {
+        Auction: null
+    } : value;
 }
-function to_candid_vec_n77(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<Player>): Array<_Player> {
-    return value.map((x)=>to_candid_Player_n78(_uploadFile, _downloadFile, x));
+function to_candid_variant_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: CompetitionMode): {
+    Cumulative: null;
+} | {
+    HeadToHead: null;
+} {
+    return value == CompetitionMode.Cumulative ? {
+        Cumulative: null
+    } : value == CompetitionMode.HeadToHead ? {
+        HeadToHead: null
+    } : value;
+}
+function to_candid_vec_n111(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<AdpEntry>): Array<_AdpEntry> {
+    return value.map((x)=>to_candid_AdpEntry_n112(_uploadFile, _downloadFile, x));
+}
+function to_candid_vec_n115(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<Player>): Array<_Player> {
+    return value.map((x)=>to_candid_Player_n116(_uploadFile, _downloadFile, x));
 }
 export interface CreateActorOptions {
     agent?: Agent;

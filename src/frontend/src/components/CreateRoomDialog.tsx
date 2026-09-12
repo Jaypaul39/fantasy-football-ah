@@ -25,8 +25,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import type { CustomScoringSettings, ScoringFormat } from "../backend";
 import { useIsMobile } from "../hooks/use-mobile";
 import { useBackend } from "../hooks/useBackend";
+import { CompetitionMode, GameType } from "../types";
 import type { AuctionSettings, RosterSettings } from "../types";
 
 const POSITIONS = [
@@ -115,6 +117,41 @@ export function CreateRoomDialog({
   const [password, setPassword] = useState("");
   const [isPending, setIsPending] = useState(false);
 
+  // Game type: Auction Only (default) or Best Ball. Guillotine is intentionally
+  // not offered here.
+  const [gameType, setGameType] = useState<GameType>(GameType.Auction);
+
+  // Competition mode + playoff teams only apply to Best Ball rooms. Auction
+  // rooms accept-and-ignore these (they are irrelevant to auction play), so
+  // the selectors are hidden unless Best Ball is selected.
+  const [competitionMode, setCompetitionMode] = useState<CompetitionMode>(
+    CompetitionMode.Cumulative,
+  );
+  const [playoffTeams, setPlayoffTeams] = useState(0);
+  const [competitionError, setCompetitionError] = useState<string | null>(null);
+
+  const isBestBall = gameType === GameType.BestBall;
+  const isHeadToHead =
+    isBestBall && competitionMode === CompetitionMode.HeadToHead;
+
+  // Scoring format: Standard / Half-PPR / PPR / Custom (default Half-PPR).
+  const [scoringType, setScoringType] = useState<
+    "std" | "halfPpr" | "ppr" | "custom"
+  >("halfPpr");
+  const [customScoring, setCustomScoring] = useState<CustomScoringSettings>({
+    receptionPoints: 1,
+    passYdPoints: 0.04,
+    passTdPoints: 4,
+    intPoints: -2,
+    rushYdPoints: 0.1,
+    rushTdPoints: 6,
+    recYdPoints: 0.1,
+    recTdPoints: 6,
+    fumbleLostPoints: -2,
+    twoPtPoints: 2,
+  });
+  const [scoringError, setScoringError] = useState<string | null>(null);
+
   const nonBenchTotal =
     rosterConfig.qb +
     rosterConfig.rb +
@@ -146,6 +183,46 @@ export function CreateRoomDialog({
     );
   }
 
+  const CUSTOM_SCORING_FIELDS: {
+    key: keyof CustomScoringSettings;
+    label: string;
+  }[] = [
+    { key: "receptionPoints", label: "Reception" },
+    { key: "passYdPoints", label: "Pass Yd" },
+    { key: "passTdPoints", label: "Pass TD" },
+    { key: "intPoints", label: "INT" },
+    { key: "rushYdPoints", label: "Rush Yd" },
+    { key: "rushTdPoints", label: "Rush TD" },
+    { key: "recYdPoints", label: "Rec Yd" },
+    { key: "recTdPoints", label: "Rec TD" },
+    { key: "fumbleLostPoints", label: "Fumble Lost" },
+    { key: "twoPtPoints", label: "2-PT" },
+  ];
+
+  function buildScoringFormat(): ScoringFormat {
+    if (scoringType === "std") return { __kind__: "std", std: null };
+    if (scoringType === "ppr") return { __kind__: "ppr", ppr: null };
+    if (scoringType === "custom") {
+      return { __kind__: "custom", custom: customScoring };
+    }
+    return { __kind__: "halfPpr", halfPpr: null };
+  }
+
+  function validateCustomScoring(): boolean {
+    for (const field of CUSTOM_SCORING_FIELDS) {
+      const value = customScoring[field.key];
+      if (value === undefined || value === null || Number.isNaN(value)) {
+        setScoringError(`"${field.label}" is required and must be a number.`);
+        return false;
+      }
+      if (value < 0) {
+        setScoringError(`"${field.label}" cannot be negative.`);
+        return false;
+      }
+    }
+    return true;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!actor) return;
@@ -170,6 +247,41 @@ export function CreateRoomDialog({
     if (selectedPositions.length === 0) {
       setPositionError("At least one position must be selected.");
       return;
+    }
+    if (scoringType === "custom" && !validateCustomScoring()) {
+      return;
+    }
+
+    // Competition mode / playoff teams validation mirrors the backend
+    // configuration families. Auction rooms accept-and-ignore these, so only
+    // Best Ball rooms are validated here.
+    if (isBestBall) {
+      const validPlayoffTeams = [0, 4, 6, 8].includes(playoffTeams);
+      if (!validPlayoffTeams) {
+        setCompetitionError(
+          "Playoff teams must be 0, 4, 6, or 8 for Best Ball rooms.",
+        );
+        return;
+      }
+      if (
+        competitionMode === CompetitionMode.Cumulative &&
+        playoffTeams !== 0
+      ) {
+        setCompetitionError(
+          "Cumulative Best Ball rooms cannot have playoffs. Set playoff teams to 0.",
+        );
+        return;
+      }
+      if (
+        competitionMode === CompetitionMode.HeadToHead &&
+        playoffTeams !== 0 &&
+        ![4, 6, 8].includes(playoffTeams)
+      ) {
+        setCompetitionError(
+          "Head-to-Head rooms with playoffs must have exactly 4, 6, or 8 playoff teams.",
+        );
+        return;
+      }
     }
 
     // Check name uniqueness before submitting
@@ -222,6 +334,9 @@ export function CreateRoomDialog({
         : null;
 
       const result = await actor.createRoom(
+        gameType,
+        competitionMode,
+        BigInt(playoffTeams),
         trimmedName,
         BigInt(budget),
         settings,
@@ -233,7 +348,7 @@ export function CreateRoomDialog({
         null,
         "redraft",
         2026n,
-        { __kind__: "halfPpr", halfPpr: null },
+        buildScoringFormat(),
       );
 
       if (result.__kind__ === "err") {
@@ -268,6 +383,7 @@ export function CreateRoomDialog({
       if (!open) {
         setNameError(null);
         setPositionError(null);
+        setCompetitionError(null);
         setPassword("");
       }
     }
@@ -314,6 +430,95 @@ export function CreateRoomDialog({
             </p>
           </div>
         </div>
+
+        {/* Game type */}
+        <div className="space-y-1.5">
+          <Label htmlFor="game-type" className="text-foreground text-sm">
+            Game Type <span className="text-destructive">*</span>
+          </Label>
+          <select
+            id="game-type"
+            value={gameType}
+            onChange={(e) => setGameType(e.target.value as GameType)}
+            className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+            data-ocid="create-room-game-type-select"
+          >
+            <option value={GameType.Auction}>Auction Only</option>
+            <option value={GameType.BestBall}>Best Ball</option>
+          </select>
+          <p className="text-[11px] text-muted-foreground">
+            Best Ball rooms use the same auction draft with best-ball scoring.
+          </p>
+        </div>
+
+        {/* Competition mode — only for Best Ball rooms */}
+        {isBestBall && (
+          <div className="space-y-1.5">
+            <Label
+              htmlFor="competition-mode"
+              className="text-foreground text-sm"
+            >
+              Competition Mode <span className="text-destructive">*</span>
+            </Label>
+            <select
+              id="competition-mode"
+              value={competitionMode}
+              onChange={(e) => {
+                setCompetitionMode(e.target.value as CompetitionMode);
+                setCompetitionError(null);
+              }}
+              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+              data-ocid="create-room-competition-mode-select"
+            >
+              <option value={CompetitionMode.Cumulative}>
+                Cumulative Best Ball
+              </option>
+              <option value={CompetitionMode.HeadToHead}>Head-to-Head</option>
+            </select>
+            <p className="text-[11px] text-muted-foreground">
+              Cumulative ranks teams by total points; Head-to-Head schedules
+              weekly matchups.
+            </p>
+          </div>
+        )}
+
+        {/* Playoff teams — only for Head-to-Head Best Ball rooms */}
+        {isHeadToHead && (
+          <div className="space-y-1.5">
+            <Label htmlFor="playoff-teams" className="text-foreground text-sm">
+              Playoff Teams <span className="text-destructive">*</span>
+            </Label>
+            <select
+              id="playoff-teams"
+              value={playoffTeams}
+              onChange={(e) => {
+                setPlayoffTeams(Number(e.target.value));
+                setCompetitionError(null);
+              }}
+              className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+              data-ocid="create-room-playoff-teams-select"
+            >
+              <option value={0}>No playoffs</option>
+              <option value={4}>4 teams</option>
+              <option value={6}>6 teams</option>
+              <option value={8}>8 teams</option>
+            </select>
+            <p className="text-[11px] text-muted-foreground">
+              Choose 0 for a regular season only, or 4, 6, or 8 for a playoff
+              field.
+            </p>
+          </div>
+        )}
+
+        {competitionError && (
+          <p
+            className="text-[11px] text-destructive"
+            role="alert"
+            data-ocid="create-room-competition-error"
+          >
+            {competitionError}
+          </p>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
@@ -436,6 +641,72 @@ export function CreateRoomDialog({
           <Settings2 className="w-3.5 h-3.5" />
           Auction Settings
         </div>
+
+        {/* Scoring format */}
+        <div className="space-y-1.5">
+          <Label htmlFor="scoring-format" className="text-foreground text-xs">
+            Scoring Format
+          </Label>
+          <select
+            id="scoring-format"
+            value={scoringType}
+            onChange={(e) => {
+              setScoringType(
+                e.target.value as "std" | "halfPpr" | "ppr" | "custom",
+              );
+              setScoringError(null);
+            }}
+            className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+            data-ocid="create-room-scoring-format-select"
+          >
+            <option value="std">Standard</option>
+            <option value="halfPpr">Half-PPR</option>
+            <option value="ppr">PPR</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+
+        {/* Custom scoring settings — only when Custom is selected */}
+        {scoringType === "custom" && (
+          <div className="rounded-lg border border-border/40 bg-card/50 p-3 space-y-3">
+            <p className="text-[11px] text-muted-foreground">
+              Set points for each scoring category. All values are required and
+              must be non-negative numbers.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {CUSTOM_SCORING_FIELDS.map((field) => (
+                <div key={field.key} className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    {field.label}
+                  </Label>
+                  <Input
+                    type="number"
+                    step="any"
+                    value={customScoring[field.key]}
+                    onChange={(e) => {
+                      setScoringError(null);
+                      setCustomScoring((prev) => ({
+                        ...prev,
+                        [field.key]: Number(e.target.value),
+                      }));
+                    }}
+                    className="h-8 text-sm text-center bg-background border-input focus:border-primary text-foreground font-semibold"
+                    data-ocid={`create-room-custom-scoring-${field.key}`}
+                  />
+                </div>
+              ))}
+            </div>
+            {scoringError && (
+              <p
+                className="text-[11px] text-destructive"
+                role="alert"
+                data-ocid="create-room-scoring-error"
+              >
+                {scoringError}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Timers subsection */}
         <div className="space-y-2">
